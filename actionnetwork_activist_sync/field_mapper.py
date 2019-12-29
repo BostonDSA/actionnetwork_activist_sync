@@ -22,27 +22,27 @@ class FieldMapper:
         """Main conversion method"""
 
         person = {
-            'email': self.exported_person['Email'],
-            'given_name': self.exported_person['first_name'],
-            'family_name': self.exported_person['last_name'],
-            'address': [self.exported_person['Address_Line_1']],
-            'city': self.exported_person['City'],
-            'country': self.exported_person['Country'],
+            'email': self.exported_person.get('Email'),
+            'given_name': self.exported_person.get('first_name'),
+            'family_name': self.exported_person.get('last_name'),
+            'address': [self.exported_person.get('Address_Line_1')],
+            'city': self.exported_person.get('City'),
+            'country': self.exported_person.get('Country'),
             'postal_code': self.get_postal_code,
             'custom_fields': {
-                'Address Line 2': self.exported_person['Address_Line_1'],
-                'AK_ID': self.exported_person['AK_ID'],
-                'BDSA Xdate': self.exported_person['Xdate'],
-                'Do Not Call': self.exported_person['Do_Not_Call'],
-                'DSA_ID': self.exported_person['DSA_ID'],
-                'Join Date': self.exported_person['Join_Date'],
-                'Mail Preference': self.exported_person['Mail_preference'],
-                'Middle Name': self.exported_person['middle_name'],
+                'Address Line 2': self.exported_person.get('Address_Line_2'),
+                'AK_ID': self.exported_person.get('AK_ID'),
+                'BDSA Xdate': self.exported_person.get('Xdate'),
+                'Do Not Call': self.exported_person.get('Do_Not_Call'),
+                'DSA_ID': self.exported_person.get('DSA_ID'),
+                'Join Date': self.exported_person.get('Join_Date'),
+                'Mail Preference': self.exported_person.get('Mail_preference'),
+                'Middle Name': self.exported_person.get('middle_name'),
                 'Phone': self.get_phone(),
                 # TODO: not currently in AN, but in AK
-                # 'Memb_status': self.exported_person['Memb_status'],
-                # 'membership_type': self.exported_person['membership_type'],
-                # 'monthly_status': self.exported_person['monthly_status']
+                # 'Memb_status': self.exported_person.get('Memb_status'),
+                # 'membership_type': self.exported_person.get('membership_type'),
+                # 'monthly_status': self.exported_person.get('monthly_status')
             }
         }
 
@@ -55,11 +55,11 @@ class FieldMapper:
         """Normalizes phone data"""
 
         # prefer mobile
-        phone = self.exported_person['Mobile_Phone']
+        phone = self.exported_person.get('Mobile_Phone')
 
         # fallback to home
         if not phone:
-            phone = self.exported_person['Home_Phone']
+            phone = self.exported_person.get('Home_Phone')
 
         # clean phone data
         if phone:
@@ -73,8 +73,8 @@ class FieldMapper:
     def get_postal_code(self) -> str:
         """Normalizes postal code data"""
 
-        postal_code = self.exported_person['Zip']
-        if len(postal_code) < 5 and postal_code.isnumeric():
+        postal_code = self.exported_person.get('Zip')
+        if postal_code and len(postal_code) < 5 and postal_code.isnumeric():
             postal_code = f'{postal_code:0>5}'
 
         return postal_code
