@@ -11,7 +11,11 @@ import agate
 import agateexcel
 from pyactionnetwork import ActionNetworkApi
 
+from actionkit_export import ActionKitExport
+from field_mapper import FieldMapper
+
 action_network = ActionNetworkApi(os.environ['ACTIONNETWORK_API_KEY'])
+dry_run = True
 
 def unsubscribe(email):
     """
@@ -28,41 +32,6 @@ def unsubscribe(email):
                 email_address['status'] = 'unsubscribed'
         payload = {'email_addresses': email_addresses}
         requests.put(person_url, json=payload, headers=action_network.headers)
-
-def row_to_person(row, person_id=None):
-    """
-    Converts an ActionKit export row to ActionNetworkApi person arguments.
-    """
-
-    person = {
-        'email': row['Email'],
-        'given_name': row['first_name'],
-        'family_name': row['last_name'],
-        # TODO: should addr2 be in the offical part or in custom?
-        'address': [row['Address_Line_1'], row['Address_Line_2']],
-        'city': row['City'],
-        'country': row['Country'],
-        'postal_code': row['Zip'],
-        'custom_fields': {
-            # 'DSA_ID': row['DSA_ID'],
-            'AK_ID': row['AK_ID'],
-            'BDSA Xdate': row['Xdate'],
-            'Do Not Call': row['Do_Not_Call'],
-            'Join Date': row['Join_Date'],
-            'Mail Preference': row['Mail_preference'],
-            'Middle Name': row['middle_name'],
-            # TODO: what's correct logic for these?
-            'Phone': row['Mobile_Phone'],
-            # 'Memb_status': row['Memb_status'],
-            # 'membership_type': row['membership_type'],
-            # 'monthly_status': row['monthly_status']
-        }
-    }
-
-    if person_id:
-        person["person_id"] = person_id
-
-    return person
 
 def get_person_id_from_response(response):
     """
@@ -86,33 +55,46 @@ def lambda_handler(event, context):
     """
 
     # TODO: come up with some system for keeping track of this
-    previous = agate.Table.from_xlsx('older.xlsx')
-    current = agate.Table.from_xlsx('newer.xlsx')
+    previous_file = open('older.xlsx', 'rb')
+    current_file = open('newer.xlsx', 'rb')
 
-    # Filter out rows without emails
-    previous_with_email = previous.where(lambda row: row['Email'] is not None)
-    current_with_email = current.where(lambda row: row['Email'] is not None)
-
-    # Find people who were in the list last time, but no longer are.
-    in_previous_not_in_current = previous_with_email.select(['Email']) \
-        .join(current_with_email, 'Email', 'Email', columns=['Email']) \
-        .where(lambda row: row['Email2'] is None)
+    actionkit_export = ActionKitExport(previous_file, current_file)
+    actionkit_export.load()
+    actionkit_export.filter_missing_email()
 
     # Take those people off the email lists
     # TODO: implement a membership flag
-    for row in in_previous_not_in_current.rows[:2]:
-        unsubscribe(row['Email'])
+    for row in actionkit_export.missing_email.rows:
+        if dry_run:
+            print('Unsubscribe: {} {}'.format(row['first_name'], row['last_name']))
+        else:
+            #unsubscribe(row['Email'])
+            pass
 
-    for row in current_with_email.rows:
+    for row in actionkit_export.get_previous_not_in_current().rows:
+        field_mapper = FieldMapper(row)
+
         get_person_response = action_network.get_person(search_string=row['Email'])
         if len(get_person_response['_embedded']['osdi:people']) == 0:
-            person = row_to_person(row)
-            action_network.create_person(**person)
+            person = field_mapper.get_actionnetwork_person()
+            if dry_run:
+                print('New member: {}'.format(person['email']))
+            else:
+                #action_network.create_person(**person)
+                pass
 
         else:
-            person = row_to_person(row, person_id)
             person_id = get_person_id_from_response(get_person_response)
-            action_network.update_person(**person)
+            field_mapper.person_id = person_id
+            person = field_mapper.get_actionnetwork_person()
+            if dry_run:
+                print('Existing member: {} ({})'.format(person['email'], person['person_id']))
+            else:
+                #action_network.update_person(**person)
+                pass
+
+    previous_file.close()
+    current_file.close()
 
     return {
         'statusCode': 200,
