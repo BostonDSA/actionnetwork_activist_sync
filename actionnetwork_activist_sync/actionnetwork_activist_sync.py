@@ -13,6 +13,7 @@ from pyactionnetwork import ActionNetworkApi
 
 from actionkit_export import ActionKitExport
 from field_mapper import FieldMapper
+from osdi import Person
 
 action_network = ActionNetworkApi(os.environ['ACTIONNETWORK_API_KEY'])
 dry_run = True
@@ -32,16 +33,6 @@ def unsubscribe(email):
                 email_address['status'] = 'unsubscribed'
         payload = {'email_addresses': email_addresses}
         requests.put(person_url, json=payload, headers=action_network.headers)
-
-def get_person_id_from_response(response):
-    """
-
-    """
-    person_id = None
-    if response['_embedded']['osdi:people']:
-        person = response['_embedded']['osdi:people'].pop()
-        person_id = [i[len('action_network:'):] for i in person['identifiers'] if i.startswith('action_network')].pop()
-    return person_id
 
 def lambda_handler(event, context):
     """
@@ -84,14 +75,15 @@ def lambda_handler(event, context):
                 pass
 
         else:
-            person_id = get_person_id_from_response(get_person_response)
-            field_mapper.person_id = person_id
-            person = field_mapper.get_actionnetwork_person()
-            if dry_run:
-                print('Existing member: {} ({})'.format(person['email'], person['person_id']))
-            else:
-                #action_network.update_person(**person)
-                pass
+            for p in get_person_response['_embedded']['osdi:people']:
+                existing_person = Person(**p)
+                field_mapper.person_id = existing_person.get_actionnetwork_id()
+                updated_person = field_mapper.get_actionnetwork_person()
+                if dry_run:
+                    print('Existing member: {} ({})'.format(updated_person['email'], updated_person['person_id']))
+                else:
+                    #action_network.update_person(**person)
+                    pass
 
     previous_file.close()
     current_file.close()
