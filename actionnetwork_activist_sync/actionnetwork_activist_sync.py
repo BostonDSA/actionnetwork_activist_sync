@@ -9,7 +9,7 @@ from actionkit_export import ActionKitExport
 from actionnetwork import ActionNetwork
 from field_mapper import FieldMapper
 
-dry_run = True
+dry_run = False
 
 def lambda_handler(event, context):
     """
@@ -46,7 +46,7 @@ def lambda_handler(event, context):
         if dry_run:
             print('Toggle membership flag: {}'.format(row['Email']))
         else:
-            #actionnetwork.remove_member_by_email(row['Email'])
+            actionnetwork.remove_member_by_email(row['Email'])
             pass
 
     for row in actionkit_export.get_previous_not_in_current().rows:
@@ -58,7 +58,7 @@ def lambda_handler(event, context):
             if dry_run:
                 print('New member: {}'.format(person['email']))
             else:
-                #action_network.create_person(**person)
+                action_network.create_person(**person)
                 pass
         else:
             for existing_person in people:
@@ -69,7 +69,7 @@ def lambda_handler(event, context):
                     print('Existing member: {} ({})'.format(
                         updated_person['email'], updated_person['person_id']))
                 else:
-                    #action_network.update_person(**updated_person)
+                    action_network.update_person(**updated_person)
                     pass
 
     previous_file.close()
