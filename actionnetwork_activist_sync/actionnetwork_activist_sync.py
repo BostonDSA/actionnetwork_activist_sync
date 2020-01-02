@@ -1,38 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-
+Main
 """
 
-import os
 import types
-import requests
-
-import agate
-import agateexcel
-from pyactionnetwork import ActionNetworkApi
 
 from actionkit_export import ActionKitExport
+from actionnetwork import ActionNetwork
 from field_mapper import FieldMapper
-from osdi import Person
 
-action_network = ActionNetworkApi(os.environ['ACTIONNETWORK_API_KEY'])
 dry_run = True
-
-def unsubscribe(email):
-    """
-    Finds people based on email address then updates the attached
-    email addresses to be unsubscribed.
-    """
-
-    get_person_response = action_network.get_person(search_string=email)
-    for person in get_person_response['_embedded']['osdi:people']:
-        person_url = person['_links']['self']['href']
-        email_addresses = person['email_addresses']
-        for email_address in email_addresses:
-            if email_address['address'] == email:
-                email_address['status'] = 'unsubscribed'
-        payload = {'email_addresses': email_addresses}
-        requests.put(person_url, json=payload, headers=action_network.headers)
 
 def lambda_handler(event, context):
     """
@@ -45,6 +22,8 @@ def lambda_handler(event, context):
     - Create people who were not on the old list, but are on the new list
     """
 
+    actionnetwork = ActionNetwork()
+
     # TODO: come up with some system for keeping track of this
     previous_file = open('older.xlsx', 'rb')
     current_file = open('newer.xlsx', 'rb')
@@ -53,36 +32,43 @@ def lambda_handler(event, context):
     actionkit_export.load()
     actionkit_export.filter_missing_email()
 
-    # Take those people off the email lists
-    # TODO: implement a membership flag
     for row in actionkit_export.missing_email.rows:
         if dry_run:
-            print('Unsubscribe: {} {}'.format(row['first_name'], row['last_name']))
+            print('Missing email: {} {}'.format(row['first_name'], row['last_name']))
         else:
-            #unsubscribe(row['Email'])
+            # TODO: figure out named based matching
+            pass
+
+    # People where are no longer in the current spreadsheet, but were
+    # in the previous one have had their membership lapse.
+
+    for row in actionkit_export.get_previous_not_in_current().rows:
+        if dry_run:
+            print('Toggle membership flag: {}'.format(row['Email']))
+        else:
+            #actionnetwork.remove_member_by_email(row['Email'])
             pass
 
     for row in actionkit_export.get_previous_not_in_current().rows:
         field_mapper = FieldMapper(row)
 
-        get_person_response = action_network.get_person(search_string=row['Email'])
-        if len(get_person_response['_embedded']['osdi:people']) == 0:
+        people = actionnetwork.get_people_by_email(row['Email'])
+        if len(people) == 0:
             person = field_mapper.get_actionnetwork_person()
             if dry_run:
                 print('New member: {}'.format(person['email']))
             else:
                 #action_network.create_person(**person)
                 pass
-
         else:
-            for p in get_person_response['_embedded']['osdi:people']:
-                existing_person = Person(**p)
+            for existing_person in people:
                 field_mapper.person_id = existing_person.get_actionnetwork_id()
                 updated_person = field_mapper.get_actionnetwork_person()
                 if dry_run:
-                    print('Existing member: {} ({})'.format(updated_person['email'], updated_person['person_id']))
+                    print('Existing member: {} ({})'.format(
+                        updated_person['email'], updated_person['person_id']))
                 else:
-                    #action_network.update_person(**person)
+                    #action_network.update_person(**updated_person)
                     pass
 
     previous_file.close()
@@ -94,6 +80,4 @@ def lambda_handler(event, context):
     }
 
 if __name__ == '__main__':
-    event = {}
-    context = types.SimpleNamespace()
-    lambda_handler(event, context)
+    lambda_handler({}, types.SimpleNamespace())
