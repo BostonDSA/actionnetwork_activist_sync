@@ -82,6 +82,17 @@ class Person:
             if i.startswith('action_network'):
                 return i[len('action_network:'):]
 
+    def get_overrides(self):
+        """Return any special override custom fields"""
+
+        overrides = {}
+
+        for field, value in self.custom_fields.items():
+            if field.startswith("override_"):
+                overrides[field[9:]] = value
+
+        return overrides
+
     @staticmethod
     def load_json(dct):
         """Converts JSON person to Person object"""

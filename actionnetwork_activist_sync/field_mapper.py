@@ -12,11 +12,13 @@ class FieldMapper:
     Attributes:
         exported_person (Dict): Single person record from ActionKit
         person_id (int): ActionNetwork ID (optional)
+        overrides (dict): fields to override
     """
 
     def __init__(self, exported_person: Dict):
         self.exported_person = exported_person
         self.person_id = None
+        self.overrides = {}
 
     def get_actionnetwork_person(self) -> Dict:
         """Main conversion method"""
@@ -47,7 +49,14 @@ class FieldMapper:
         }
 
         if self.person_id:
-            person["person_id"] = self.person_id
+            person['person_id'] = self.person_id
+
+        for field, value in self.overrides.items():
+            if field in person:
+                person[field] = value
+
+            if field in person['custom_fields']:
+                person['custom_fields'][field] = value
 
         return person
 

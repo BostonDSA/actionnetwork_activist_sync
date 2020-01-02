@@ -64,6 +64,7 @@ def lambda_handler(event, context):
             for existing_person in people:
                 field_mapper.person_id = existing_person.get_actionnetwork_id()
                 updated_person = field_mapper.get_actionnetwork_person()
+                field_mapper.overrides = existing_person.get_overrides()
                 if dry_run:
                     print('Existing member: {} ({})'.format(
                         updated_person['email'], updated_person['person_id']))

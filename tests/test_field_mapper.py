@@ -37,3 +37,15 @@ class TestFieldMapper(unittest.TestCase):
         field_mapper = FieldMapper({'Zip': raw})
         actual = field_mapper.get_postal_code()
         self.assertEqual(expected, actual)
+
+    def test_overrides_basic_field(self):
+        field_mapper = FieldMapper({'given_name': 'Test'})
+        field_mapper.overrides = {'given_name': 'NewName'}
+        person = field_mapper.get_actionnetwork_person()
+        self.assertEqual('NewName', person['given_name'])
+
+    def test_overrides_custom_field(self):
+        field_mapper = FieldMapper({'Phone': '6175555555'})
+        field_mapper.overrides = {'Phone': '6176666666'}
+        person = field_mapper.get_actionnetwork_person()
+        self.assertEqual('6176666666', person['custom_fields']['Phone'])
