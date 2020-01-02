@@ -15,13 +15,7 @@ class TestActionNetwork(unittest.TestCase):
 
     def setUp(self):
         self.actionnetwork = ActionNetwork()
-        self.email = ''
-
-    def test_get_people_by_email(self):
-        """Test searching for someone based on email"""
-
-        people = self.actionnetwork.get_people_by_email(self.email)
-        self.assertEqual(people[0].email_addresses[0]['address'], self.email)
+        self.email = 'tech+fake@bostondsa.org'
 
     def test_remove_member_by_email(self):
         """Test updating the membership flag
@@ -30,3 +24,9 @@ class TestActionNetwork(unittest.TestCase):
 
         updated_people = self.actionnetwork.remove_member_by_email(self.email)
         self.assertEqual(updated_people[0].custom_fields['is_member'], '0')
+
+    def test_get_people_by_email(self):
+        """Test searching for someone based on first name + last name"""
+
+        people = self.actionnetwork.get_people_by_email(self.email)
+        self.assertEqual(people[0].email_addresses[0]['address'], self.email)
