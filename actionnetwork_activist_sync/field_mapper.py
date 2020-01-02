@@ -13,12 +13,14 @@ class FieldMapper:
         exported_person (Dict): Single person record from ActionKit
         person_id (int): ActionNetwork ID (optional)
         overrides (dict): fields to override
+        is_member (str): "1" true, "0" false (API uses strings)
     """
 
     def __init__(self, exported_person: Dict):
         self.exported_person = exported_person
         self.person_id = None
         self.overrides = {}
+        self.is_member = "1"
 
     def get_actionnetwork_person(self) -> Dict:
         """Main conversion method"""
@@ -41,6 +43,7 @@ class FieldMapper:
                 'Mail Preference': self.exported_person.get('Mail_preference'),
                 'Middle Name': self.exported_person.get('middle_name'),
                 'Phone': self.get_phone(),
+                'is_member': self.is_member
                 # TODO: not currently in AN, but in AK
                 # 'Memb_status': self.exported_person.get('Memb_status'),
                 # 'membership_type': self.exported_person.get('membership_type'),

@@ -34,7 +34,7 @@ class ActionNetwork(ActionNetworkApi):
         for person in people:
             response = self.update_person(
                 person_id=person.get_actionnetwork_id(),
-                custom_fields={'is_member': False}
+                custom_fields={'is_member': '0'}
             )
             updated_people.append(Person(**response))
         return updated_people
