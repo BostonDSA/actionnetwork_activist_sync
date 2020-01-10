@@ -17,6 +17,8 @@ class ActionNetwork(ActionNetworkApi):
     """
 
     def __init__(self):
+        if not 'ACTIONNETWORK_API_KEY' in os.environ:
+            raise KeyError('Set ACTIONNETWORK_API_KEY env var')
         super().__init__(os.environ['ACTIONNETWORK_API_KEY'])
 
     def remove_member_by_email(self, email):
