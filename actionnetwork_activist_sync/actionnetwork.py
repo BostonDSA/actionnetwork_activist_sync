@@ -8,7 +8,7 @@ import os
 
 from pyactionnetwork import ActionNetworkApi
 
-from actionnetwork_activist_sync.osdi import Person
+from osdi import Person
 
 class ActionNetwork(ActionNetworkApi):
     """Helper class to interact with the ActionNetwork API
