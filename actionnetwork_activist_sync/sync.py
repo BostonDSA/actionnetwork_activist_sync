@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-Main
+'Main' controller that does the sync
 """
 
 import types
 
-from actionkit_export import ActionKitExport
-from actionnetwork import ActionNetwork
-from field_mapper import FieldMapper
+from actionnetwork_activist_sync.actionkit_export import ActionKitExport
+from actionnetwork_activist_sync.actionnetwork import ActionNetwork
+from actionnetwork_activist_sync.field_mapper import FieldMapper
 
 dry_run = False
 
-def lambda_handler(event, context):
+def sync():
     """
     The 'main' function that gets invoked by AWS Lambda.
 
@@ -79,6 +79,3 @@ def lambda_handler(event, context):
         'statusCode': 200,
         'body': 'Sync Complete'
     }
-
-if __name__ == '__main__':
-    lambda_handler({}, types.SimpleNamespace())
