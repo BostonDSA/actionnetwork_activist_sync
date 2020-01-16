@@ -90,7 +90,8 @@ class FieldMapper:
             'AK_ID': self.exported_person.get('AK_ID'),
             'BDSA Xdate': self.exported_person.get('Xdate'),
             'Do Not Call': self.exported_person.get('Do_Not_Call'),
-            'DSA_ID': self.exported_person.get('DSA_ID'),
+            # This is deprecated
+            #'DSA_ID': self.exported_person.get('DSA_ID'),
             'Join Date': self.exported_person.get('Join_Date'),
             'Mail Preference': self.exported_person.get('Mail_preference'),
             'Middle Name': self.exported_person.get('middle_name'),
