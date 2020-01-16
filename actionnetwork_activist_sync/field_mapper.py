@@ -14,14 +14,14 @@ class FieldMapper:
         exported_person (agate.Row): Single person record from ActionKit
         person_id (int): ActionNetwork ID (optional)
         overrides (dict): fields to override
-        is_member (str): "1" true, "0" false (API uses strings)
+        is_member (str): "True", "False" (API uses strings)
     """
 
     def __init__(self, exported_person):
         self.exported_person = exported_person
         self.person_id = None
         self.overrides = {}
-        self.is_member = "1"
+        self.is_member = 'True'
 
     def get_actionnetwork_person(self):
         """Main conversion method"""

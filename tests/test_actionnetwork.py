@@ -23,7 +23,7 @@ class TestActionNetwork(unittest.TestCase):
         Don't do this on a real member."""
 
         updated_people = self.actionnetwork.remove_member_by_email(self.email)
-        self.assertEqual(updated_people[0].custom_fields['is_member'], '0')
+        self.assertEqual(updated_people[0].custom_fields['is_member'], 'False')
 
     def test_get_people_by_email(self):
         """Test searching for someone based on first name + last name"""
