@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "3a18c810753b194fc69ca0ac38cbf073e1cac587c2ad83205d8945e353fdfbee"
+            "sha256": "696e25393370b23f70efa53286bf9f62cba568a70d28daf8f9ff34c6a1a5bd04"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -45,10 +45,10 @@
         },
         "babel": {
             "hashes": [
-                "sha256:af92e6106cb7c55286b25b38ad7695f8b4efb36a90ba483d7f7a6628c46158ab",
-                "sha256:e86135ae101e31e2c8ec20a4e0c5220f4eed12487d5cf3f78be7e98d3a57fc28"
+                "sha256:1aac2ae2d0d8ea368fa90906567f5c08463d98ade155c0c4bfedd6a0f7160e38",
+                "sha256:d670ea0b10f8b723672d3a6abeb87b565b244da220d76b4dba1b66269ec152d4"
             ],
-            "version": "==2.7.0"
+            "version": "==2.8.0"
         },
         "certifi": {
             "hashes": [
@@ -64,6 +64,13 @@
             ],
             "version": "==3.0.4"
         },
+        "colored": {
+            "hashes": [
+                "sha256:056fac09d9e39b34296e7618897ed1b8c274f98423770c2980d829fd670955ed"
+            ],
+            "index": "pypi",
+            "version": "==1.4.2"
+        },
         "csvkit": {
             "hashes": [
                 "sha256:1353a383531bee191820edfb88418c13dfe1cdfa9dd3dc46f431c05cd2a260a0"
@@ -77,6 +84,14 @@
                 "sha256:f604def58c59694fa0160d7be5d0b8d594467278d2bb6a47d46daf7162c84cec"
             ],
             "version": "==2.0.7"
+        },
+        "dictdiffer": {
+            "hashes": [
+                "sha256:1adec0d67cdf6166bda96ae2934ddb5e54433998ceab63c984574d187cc563d2",
+                "sha256:d79d9a39e459fe33497c858470ca0d2e93cb96621751de06d631856adfd9c390"
+            ],
+            "index": "pypi",
+            "version": "==0.8.1"
         },
         "et-xmlfile": {
             "hashes": [
@@ -114,9 +129,9 @@
         },
         "openpyxl": {
             "hashes": [
-                "sha256:eb68c08a72ac6d9812df181e88ebece3a68436364353eb6eda3bed863e3d73a6"
+                "sha256:547a9fc6aafcf44abe358b89ed4438d077e9d92e4f182c87e2dc294186dc4b64"
             ],
-            "version": "==3.0.2"
+            "version": "==3.0.3"
         },
         "parsedatetime": {
             "hashes": [

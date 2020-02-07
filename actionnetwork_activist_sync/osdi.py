@@ -93,6 +93,20 @@ class Person:
 
         return overrides
 
+    def merge_primary_email(self):
+        primary = [e['address'] for e in self.email_addresses if e['primary']]
+        self.email = primary[0] if primary else None
+
+    def merge_primary_address(self):
+        primary = [a for a in self.postal_addresses if a['primary']][0]
+        if 'address_lines' in primary:
+            self.address = [primary['address_lines'][0]]
+        else:
+            self.address = None
+        self.city = primary['locality'] if 'locality' in primary else None
+        self.state = primary['region'] if 'region' in primary else None
+        self.postal_code = primary['postal_code'] if 'postal_code' in primary else None
+
     @staticmethod
     def load_json(dct):
         """Converts JSON person to Person object"""

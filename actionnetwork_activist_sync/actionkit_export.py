@@ -41,7 +41,7 @@ class ActionKitExport:
             raise TypeError
 
         self.previous = agate.Table.from_xlsx(self.previous_file)
-        self.current = agate.Table.from_xlsx(self.current_file)
+        self.current = agate.Table.from_csv(self.current_file)
 
     def filter_missing_email(self) -> None:
         """Strips out and saves rows that are missing emails"""

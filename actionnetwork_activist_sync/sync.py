@@ -3,10 +3,9 @@
 'Main' controller that does the sync
 """
 
-import types
-
 from actionnetwork_activist_sync.actionkit_export import ActionKitExport
 from actionnetwork_activist_sync.actionnetwork import ActionNetwork
+from actionnetwork_activist_sync.debug import PersonCompare
 from actionnetwork_activist_sync.field_mapper import FieldMapper
 
 dry_run = False
@@ -26,7 +25,7 @@ def sync():
 
     # TODO: come up with some system for keeping track of this
     previous_file = open('older.xlsx', 'rb')
-    current_file = open('newer.xlsx', 'rb')
+    current_file = open('newer.csv', 'r')
 
     actionkit_export = ActionKitExport(previous_file, current_file)
     actionkit_export.load()
@@ -49,7 +48,7 @@ def sync():
             actionnetwork.remove_member_by_email(row['Email'])
             pass
 
-    for row in actionkit_export.get_previous_not_in_current().rows:
+    for row in actionkit_export.current.rows:
         field_mapper = FieldMapper(row)
 
         people = actionnetwork.get_people_by_email(row['Email'])
@@ -58,19 +57,19 @@ def sync():
             if dry_run:
                 print('New member: {}'.format(person['email']))
             else:
-                action_network.create_person(**person)
-                pass
+                actionnetwork.create_person(**person)
         else:
             for existing_person in people:
                 field_mapper.person_id = existing_person.get_actionnetwork_id()
                 updated_person = field_mapper.get_actionnetwork_person()
                 field_mapper.overrides = existing_person.get_overrides()
                 if dry_run:
-                    print('Existing member: {} ({})'.format(
-                        updated_person['email'], updated_person['person_id']))
+                    print('Updating person: {}'.format(field_mapper.person_id))
+                    comp = PersonCompare(existing_person, updated_person)
+                    comp.print_diff()
+                    print()
                 else:
-                    action_network.update_person(**updated_person)
-                    pass
+                    actionnetwork.update_person(**updated_person)
 
     previous_file.close()
     current_file.close()
