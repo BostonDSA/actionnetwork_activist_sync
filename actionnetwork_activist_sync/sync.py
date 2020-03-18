@@ -32,9 +32,8 @@ def sync():
     actionkit_export.filter_missing_email()
 
     for row in actionkit_export.missing_email.rows:
-        if dry_run:
-            print('Missing email: {} {}'.format(row['first_name'], row['last_name']))
-        else:
+        print('Missing email: {} {}'.format(row['first_name'], row['last_name']))
+        if not dry_run:
             # TODO: figure out named based matching
             pass
 
@@ -42,11 +41,9 @@ def sync():
     # in the previous one have had their membership lapse.
 
     for row in actionkit_export.get_previous_not_in_current().rows:
-        if dry_run:
-            print('Toggle membership flag: {}'.format(row['Email']))
-        else:
+        print('Toggle membership flag: {}'.format(row['Email']))
+        if not dry_run:
             actionnetwork.remove_member_by_email(row['Email'])
-            pass
 
     for row in actionkit_export.current.rows:
         field_mapper = FieldMapper(row)
@@ -54,21 +51,20 @@ def sync():
         people = actionnetwork.get_people_by_email(row['Email'])
         if len(people) == 0:
             person = field_mapper.get_actionnetwork_person()
-            if dry_run:
-                print('New member: {}'.format(person['email']))
-            else:
+            print('New member: {}'.format(person['email']))
+            if not dry_run:
                 actionnetwork.create_person(**person)
         else:
             for existing_person in people:
                 field_mapper.person_id = existing_person.get_actionnetwork_id()
                 updated_person = field_mapper.get_actionnetwork_person()
                 field_mapper.overrides = existing_person.get_overrides()
-                if dry_run:
-                    print('Updating person: {}'.format(field_mapper.person_id))
-                    comp = PersonCompare(existing_person, updated_person)
-                    comp.print_diff()
-                    print()
-                else:
+
+                print('Updating person: {}'.format(field_mapper.person_id))
+                comp = PersonCompare(existing_person, updated_person)
+                comp.print_diff()
+                print()
+                if not dry_run:
                     actionnetwork.update_person(**updated_person)
 
     previous_file.close()
