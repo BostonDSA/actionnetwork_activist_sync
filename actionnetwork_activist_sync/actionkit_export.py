@@ -40,7 +40,7 @@ class ActionKitExport:
         if not isinstance(self.current_file, io.IOBase):
             raise TypeError
 
-        self.previous = agate.Table.from_xlsx(self.previous_file)
+        self.previous = agate.Table.from_csv(self.previous_file)
         self.current = agate.Table.from_csv(self.current_file)
 
     def filter_missing_email(self) -> None:

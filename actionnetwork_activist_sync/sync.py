@@ -24,7 +24,7 @@ def sync():
     actionnetwork = ActionNetwork()
 
     # TODO: come up with some system for keeping track of this
-    previous_file = open('older.xlsx', 'rb')
+    previous_file = open('older.csv', 'r')
     current_file = open('newer.csv', 'r')
 
     actionkit_export = ActionKitExport(previous_file, current_file)
