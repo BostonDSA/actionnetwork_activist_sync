@@ -4,17 +4,21 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+awscli-local = "*"
 ddt = "*"
+localstack = "*"
+localstack-client = "*"
 pylint = "*"
+python-lambda-local = "*"
 
 [packages]
 agate = "*"
-csvkit = "*"
 agate-excel = "*"
-pyactionnetwork = "*"
-dictdiffer = "*"
-colored = "*"
 boto3 = "*"
+colored = "*"
+csvkit = "*"
+dictdiffer = "*"
+pyactionnetwork = "*"
 
 [requires]
 python_version = "3.7"
