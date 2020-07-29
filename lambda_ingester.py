@@ -28,7 +28,9 @@ def lambda_handler(event, context):
         with open(download_path) as email_file:
             msg = email.message_from_file(email_file, policy=email.policy.default)
 
-            # TODO: add a check for a secret
+            if os.environ['DSA_KEY'] != msg.get('DsaKey'):
+                print('DSA Key not found in email header, aborting.')
+                return
 
             try:
                 [attach] = [a for a in msg.iter_attachments() if a.get_content_type() == 'application/vnd.ms-excel']
