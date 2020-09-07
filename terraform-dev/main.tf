@@ -13,7 +13,7 @@ provider "aws" {
     # apigateway     = "http://localhost:4567"
     # cloudformation = "http://localhost:4581"
     # cloudwatch     = "http://localhost:4582"
-    # dynamodb       = "http://localhost:4569"
+    dynamodb       = "http://localhost:4569"
     # es             = "http://localhost:4578"
     # firehose       = "http://localhost:4573"
     # iam            = "http://localhost:4593"
@@ -25,7 +25,7 @@ provider "aws" {
     # secretsmanager = "http://localhost:4584"
     # ses            = "http://localhost:4579"
     # sns            = "http://localhost:4575"
-    # sqs            = "http://localhost:4576"
+    sqs            = "http://localhost:4576"
     # ssm            = "http://localhost:4583"
     # stepfunctions  = "http://localhost:4585"
     # sts            = "http://localhost:4592"
@@ -35,4 +35,8 @@ provider "aws" {
 resource "aws_s3_bucket" "an-sync-bucket" {
   bucket = format("%s.%s", var.bucket, var.domain)
   acl    = "public-read-write"
+}
+
+resource "aws_sqs_queue" "an-sync-ingested" {
+  name = "an-sync-ingested"
 }

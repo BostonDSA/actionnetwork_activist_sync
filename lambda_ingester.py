@@ -10,8 +10,11 @@ import uuid
 from urllib.parse import unquote_plus
 
 s3_client = boto3.client('s3')
+sqs_client = boto3.client('sqs')
+
 if os.environ['ENVIRONMENT'] == 'local':
     s3_client = localstack_client.session.Session().client('s3')
+    sqs_client = localstack_client.session.Session().client('sqs')
 
 def lambda_handler(event, context):
     for record in event['Records']:
@@ -39,5 +42,13 @@ def lambda_handler(event, context):
                 sys.exit(0)
 
             csv_lines = attach.get_content().decode().splitlines()
+
+            count = 0
             for row in csv.DictReader(csv_lines):
-                print(json.dumps(dict(row)))
+                sqs_client.send_message(
+                    QueueUrl=os.environ['SQS_URL_INGESTED'],
+                    MessageBody=json.dumps(dict(row))
+                )
+                count += 1
+
+            print('Finished processing CSV ({} rows).'.format(count))
