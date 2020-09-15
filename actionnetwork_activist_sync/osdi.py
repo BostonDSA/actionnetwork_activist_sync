@@ -21,6 +21,8 @@ class Person:
             the format [system name]:[id]
         email_addresses (List): An array of email address object hashes
             associated with the person.
+        phone_numbers (List): An array of phone number object hashes
+            associated with the person.
         postal_addresses (List): An array of postal address object
             hashes associated with the person.
         _links (List): The links associated with this resource,
@@ -38,6 +40,8 @@ class Person:
         identifiers (List): A unique string array of identifiers in
             the format [system name]:[id]
         email_addresses (List): An array of email address object hashes
+            associated with the person.
+        phone_numbers (List): An array of phone number object hashes
             associated with the person.
         postal_addresses (List): An array of postal address object
             hashes associated with the person.
@@ -57,6 +61,7 @@ class Person:
             family_name='',
             identifiers=[],
             email_addresses=[],
+            phone_numbers=[],
             postal_addresses=[],
             _links=[],
             custom_fields=[],
@@ -68,6 +73,7 @@ class Person:
         self.family_name = family_name
         self.identifiers = identifiers
         self.email_addresses = email_addresses
+        self.phone_numbers = phone_numbers
         self.postal_addresses = postal_addresses
         self._links = _links
         self.custom_fields = custom_fields
