@@ -40,3 +40,4 @@ resource "aws_s3_bucket" "an-sync-bucket" {
 resource "aws_sqs_queue" "an-sync-ingested" {
   name = "an-sync-ingested"
 }
+

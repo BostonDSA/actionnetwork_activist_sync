@@ -1,3 +1,9 @@
+start-ingest: init-ingest local-upload-sample
+
+init-ingest:
+	docker-compose up -d
+	cd terraform-dev && terraform apply -auto-approve && cd ..
+
 local-ingest:
 	pipenv run python-lambda-local -f lambda_handler lambda_ingester.py lambda_ingester_event.json
 
