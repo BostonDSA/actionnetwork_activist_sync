@@ -5,9 +5,10 @@ https://actionnetwork.org/docs
 """
 
 import os
+import time
+import requests
 
 from pyactionnetwork import ActionNetworkApi
-
 from actionnetwork_activist_sync.osdi import Person
 
 class ActionNetwork(ActionNetworkApi):
@@ -34,10 +35,19 @@ class ActionNetwork(ActionNetworkApi):
         updated_people = []
         people = self.get_people_by_email(email)
         for person in people:
-            response = self.update_person(
-                person_id=person.get_actionnetwork_id(),
-                custom_fields={'is_member': 'False'}
-            )
+            for i in range(0, 3):
+                try:
+                    response = self.update_person(
+                        person_id=person.get_actionnetwork_id(),
+                        custom_fields={'is_member': 'False'}
+                    )
+                except requests.exceptions.ConnectionError:
+                    time.sleep(5)
+                if response:
+                    break
+
+            if not response:
+                raise Exception('Failed to contact ActionNetwork API for update')
             updated_people.append(Person(**response))
         return updated_people
 
@@ -51,5 +61,15 @@ class ActionNetwork(ActionNetworkApi):
             list of Person objects with updated data
         """
 
-        response = self.get_person(search_string=email)
+        for i in range(0, 3):
+            try:
+                response = self.get_person(search_string=email)
+            except requests.exceptions.ConnectionError:
+                time.sleep(5)
+            if response:
+                break
+
+        if not response:
+            raise Exception('Failed to contact ActionNetwork API to get person')
+
         return [Person(**p) for p in response['_embedded']['osdi:people']]
