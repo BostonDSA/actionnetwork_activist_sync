@@ -1,6 +1,6 @@
 provider "aws" {
   profile = "bostondsa"
-  region = "us-east-1"
+  region  = "us-east-1"
 }
 
 locals {
@@ -20,14 +20,14 @@ resource "aws_ses_active_receipt_rule_set" "default" {
 }
 
 resource "aws_ses_receipt_rule" "an-sync-ses-rule" {
-  name = "${var.project}_incoming"
+  name          = "${var.project}_incoming"
   rule_set_name = aws_ses_receipt_rule_set.default.rule_set_name
-  recipients = [local.email]
-  enabled = true
+  recipients    = [local.email]
+  enabled       = true
 
   s3_action {
     bucket_name = aws_s3_bucket.an-sync-bucket.bucket
-    position = 1
+    position    = 1
   }
 }
 
@@ -35,17 +35,17 @@ resource "aws_ses_receipt_rule" "an-sync-ses-rule" {
 
 data "aws_iam_policy_document" "an-sync-bucket-policy" {
   statement {
-    sid = "AllowSESPuts"
-    actions = ["s3:PutObject"]
+    sid       = "AllowSESPuts"
+    actions   = ["s3:PutObject"]
     resources = [format("%s/*", aws_s3_bucket.an-sync-bucket.arn)]
     principals {
-      type = "Service"
+      type        = "Service"
       identifiers = ["ses.amazonaws.com"]
     }
     condition {
-      test = "StringEquals"
+      test     = "StringEquals"
       variable = "aws:Referer"
-      values = [data.aws_caller_identity.current.account_id]
+      values   = [data.aws_caller_identity.current.account_id]
     }
   }
 }
@@ -59,9 +59,9 @@ resource "aws_s3_bucket_public_access_block" "an-sync-bucket-policy" {
   # This makes sure we don't accidentally put anything in the bucket publically
   bucket = aws_s3_bucket.an-sync-bucket.id
 
-  block_public_acls = true
-  block_public_policy = true
-  ignore_public_acls = true
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
   restrict_public_buckets = true
 }
 
@@ -116,7 +116,7 @@ resource "aws_iam_policy" "an-sync-lambda-policy-attach" {
 }
 
 resource "aws_iam_role" "an-sync-incoming-lambda-role" {
-  name = "an-sync-incoming-lambda-role"
+  name               = "an-sync-incoming-lambda-role"
   assume_role_policy = data.aws_iam_policy_document.an-sync-lambda-policy-assume.json
 }
 
@@ -135,12 +135,12 @@ resource "aws_lambda_permission" "an-sync-incoming-lambda-permission" {
 }
 
 resource "aws_lambda_function" "an-sync-incoming-lambda" {
-  filename      = "../function.zip"
+  filename         = "../function.zip"
   source_code_hash = data.archive_file.function.output_base64sha256
-  function_name = "an-sync-incoming-lambda"
-  role          = aws_iam_role.an-sync-incoming-lambda-role.arn
-  handler       = "lambda_function.lambda_handler"
-  runtime       = "python3.7"
+  function_name    = "an-sync-incoming-lambda"
+  role             = aws_iam_role.an-sync-incoming-lambda-role.arn
+  handler          = "lambda_function.lambda_handler"
+  runtime          = "python3.7"
 }
 
 data "archive_file" "function" {
