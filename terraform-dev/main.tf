@@ -32,12 +32,12 @@ provider "aws" {
   }
 }
 
-resource "aws_s3_bucket" "an-sync-bucket" {
-  bucket = format("%s.%s", var.bucket, var.domain)
-  acl    = "public-read-write"
+module "shared" {
+  source = "../terraform-shared"
 }
 
-resource "aws_sqs_queue" "an-sync-ingested" {
-  name = "an-sync-ingested"
+resource "aws_s3_bucket" "an-sync-bucket" {
+  bucket = format("%s.%s", module.shared.bucket, module.shared.domain)
+  acl    = "public-read-write"
 }
 

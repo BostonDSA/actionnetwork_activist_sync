@@ -3,8 +3,12 @@ provider "aws" {
   region  = "us-east-1"
 }
 
+module "shared" {
+  source = "../terraform-shared"
+}
+
 locals {
-  email = format("%s@%s", var.project, var.domain)
+  email = format("%s@%s", module.shared.project, module.shared.domain)
 }
 
 data "aws_caller_identity" "current" {}
@@ -20,7 +24,7 @@ resource "aws_ses_active_receipt_rule_set" "default" {
 }
 
 resource "aws_ses_receipt_rule" "an-sync-ses-rule" {
-  name          = "${var.project}_incoming"
+  name          = "${module.shared.project}_incoming"
   rule_set_name = aws_ses_receipt_rule_set.default.rule_set_name
   recipients    = [local.email]
   enabled       = true
@@ -66,7 +70,7 @@ resource "aws_s3_bucket_public_access_block" "an-sync-bucket-policy" {
 }
 
 resource "aws_s3_bucket" "an-sync-bucket" {
-  bucket = format("%s.%s", var.bucket, var.domain)
+  bucket = format("%s.%s", var.bucket, module.shared.domain)
   acl    = "private"
 }
 
