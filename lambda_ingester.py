@@ -12,12 +12,15 @@ import sys
 import uuid
 from urllib.parse import unquote_plus
 
+from actionnetwork_activist_sync.state_model import State
+
 logger = logging.getLogger()
 json_handler = logging.StreamHandler()
 formatter = jsonlogger.JsonFormatter()
 json_handler.setFormatter(formatter)
 logger.addHandler(json_handler)
 logger.removeHandler(logger.handlers[0])
+
 dynamodb_client = boto3.client('dynamodb')
 s3_client = boto3.client('s3')
 
@@ -54,9 +57,6 @@ def lambda_handler(event, context):
                 # No CSV, something is wrong
                 sys.exit(0)
 
-            # Use dynamo to track progress between syncs
-            init_db()
-
             csv_lines = attach.get_content().decode().splitlines()
 
             count = 0
@@ -67,42 +67,14 @@ def lambda_handler(event, context):
                     # We can't continue processing without an email
                     pass
 
-                sqs_client.send_message(
-                    QueueUrl=os.environ['SQS_URL_INGESTED'],
-                    MessageBody=json.dumps(d_row)
+                state = State(
+                    d_row['Email'],
+                    batch,
+                    raw=json.dumps(d_row),
+                    status=State.UNPROCESSED
                 )
-
-                dynamo_clientdb.put_item(
-                    TableName=dynamo_table_name,
-            logger.info('Finished processing CSV.', extra={'num_rows': count})
-                        'email': {'S': d_row['Email']},
-                        'processed': {'BOOL': False}
-                    }
-                )
+                state.save()
 
                 count += 1
 
-            print(f'Finished processing CSV ({count} rows).')
-
-def init_db():
-    try:
-        dynamo_clientdb.create_table(
-            TableName=dynamo_table_name,
-            KeySchema=[
-                {
-                    'AttributeName': 'email',
-                    'KeyType': 'HASH'
-                }
-            ],
-            AttributeDefinitions=[
-                {
-                    'AttributeName': 'email',
-                    'AttributeType': 'S'
-                }
-            ],
-            BillingMode='PAY_PER_REQUEST'
-        )
-        dynamo_clientdb.get_waiter('table_exists').wait(TableName=dynamo_table_name)
-        print(f'Table created: {dynamo_table_name}')
-    except dynamo_clientdb.exceptions.ResourceInUseException:
-        print(f'Table already exists: {dynamo_table_name}')
+            logger.info('Finished processing CSV.', extra={'num_rows': count})
