@@ -1,6 +1,7 @@
 start-ingest: init-ingest local-upload-sample
 
 init-ingest:
+	-pipenv shell
 	docker-compose up -d
 	cd terraform-dev && terraform apply -auto-approve && cd ..
 
@@ -9,6 +10,3 @@ local-ingest:
 
 local-upload-sample:
 	awslocal s3 cp sample.email s3://actionnetworkactivistsync.bostondsa.net/sample.email
-
-local-ls-queue:
-	awslocal sqs receive-message --queue-url=http://localhost:4576/000000000000/an-sync-ingested
