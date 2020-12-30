@@ -20,15 +20,12 @@ logger.addHandler(json_handler)
 logger.removeHandler(logger.handlers[0])
 dynamodb_client = boto3.client('dynamodb')
 s3_client = boto3.client('s3')
-sqs_client = boto3.client('sqs')
 
-if os.environ['ENVIRONMENT'] == 'local':
-    dynamo_clientdb = localstack_client.session.Session().client('dynamodb')
+if os.environ.get('ENVIRONMENT') == 'local':
+    dynamodb_client = localstack_client.session.Session().client('dynamodb')
     s3_client = localstack_client.session.Session().client('s3')
-    sqs_client = localstack_client.session.Session().client('sqs')
 
-yearweek = datetime.date.today().strftime('%Y%U')
-dynamo_table_name = f'an-sync-{yearweek}'
+batch = datetime.date.today().strftime('%Y%U')
 
 def lambda_handler(event, context):
     for record in event['Records']:
