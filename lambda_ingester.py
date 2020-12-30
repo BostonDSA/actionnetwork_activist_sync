@@ -5,11 +5,19 @@ import email
 import email.policy
 import json
 import localstack_client.session
+import logging
 import os
+from pythonjsonlogger import jsonlogger
 import sys
 import uuid
 from urllib.parse import unquote_plus
 
+logger = logging.getLogger()
+json_handler = logging.StreamHandler()
+formatter = jsonlogger.JsonFormatter()
+json_handler.setFormatter(formatter)
+logger.addHandler(json_handler)
+logger.removeHandler(logger.handlers[0])
 dynamodb_client = boto3.client('dynamodb')
 s3_client = boto3.client('s3')
 sqs_client = boto3.client('sqs')
@@ -30,7 +38,9 @@ def lambda_handler(event, context):
         key = unquote_plus(record['s3']['object']['key'])
         tmpkey = key.replace('/', '')
         download_path = f'/tmp/{uuid.uuid4()}{tmpkey}'
-        print(f'bucket: {bucket} key: {key} download_path: {download_path}')
+        logger.info(
+            'Downloading file from bucket',
+            extra={"bucket": bucket, "key": key, "download_path": download_path})
         s3_client.download_file(bucket, key, download_path)
 
         # Parse email and CSV attachment
@@ -38,7 +48,7 @@ def lambda_handler(event, context):
             msg = email.message_from_file(email_file, policy=email.policy.default)
 
             if os.environ['DSA_KEY'] != msg.get('DsaKey'):
-                print('DSA Key not found in email header, aborting.')
+                logger.error('DSA Key not found in email header, aborting.')
                 return
 
             try:
@@ -67,7 +77,7 @@ def lambda_handler(event, context):
 
                 dynamo_clientdb.put_item(
                     TableName=dynamo_table_name,
-                    Item={
+            logger.info('Finished processing CSV.', extra={'num_rows': count})
                         'email': {'S': d_row['Email']},
                         'processed': {'BOOL': False}
                     }
