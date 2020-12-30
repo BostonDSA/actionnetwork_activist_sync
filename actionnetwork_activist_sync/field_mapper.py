@@ -2,7 +2,7 @@
 """Logic to convert people data from ActionKit to ActionNetwork"""
 
 from datetime import datetime
-from decimal import *
+from decimal import Decimal
 
 class FieldMapper:
     """Map fields from ActionKit to ActionNetwork
