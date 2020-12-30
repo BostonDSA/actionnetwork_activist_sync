@@ -11,5 +11,5 @@ output "bucket" {
 }
 
 output "db-table" {
-    value = aws_dynamodb_table.an-sync
+  value = aws_dynamodb_table.an-sync
 }
