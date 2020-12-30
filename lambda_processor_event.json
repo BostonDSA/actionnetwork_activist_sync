@@ -1,0 +1,26 @@
+{
+  "Records": [
+      {
+          "eventID": "7de3041dd709b024af6f29e4fa13d34c",
+          "eventName": "INSERT",
+          "eventVersion": "1.1",
+          "eventSource": "aws:dynamodb",
+          "awsRegion": "us-east-1",
+          "dynamodb": {
+              "ApproximateCreationDateTime": 1479499740,
+              "Keys": {
+                  "email": {
+                      "S": "parks@boston.gov"
+                  },
+                  "batch": {
+                      "S": "202052"
+                  }
+              },
+              "SequenceNumber": "13021600000000001596893679",
+              "SizeBytes": 112,
+              "StreamViewType": "KEYS_ONLY"
+          },
+          "eventSourceARN": "arn:aws:dynamodb:us-east-1:123456789012:table/BarkTable/stream/2016-11-16T20:42:48.104"
+      }
+  ]
+}
