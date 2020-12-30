@@ -1,3 +1,10 @@
+"""
+This lambda reads an email that was put in S3 by SES. The email must
+have a secret header set otherwise this ignores the email. It converts
+the CSV attachment from the email into DynamoDB items. The CSV attachment
+is of the format that gets exported from ActionKit.
+"""
+
 import boto3
 import csv
 import datetime
@@ -31,6 +38,13 @@ if os.environ.get('ENVIRONMENT') == 'local':
 batch = datetime.date.today().strftime('%Y%U')
 
 def lambda_handler(event, context):
+    """
+    This handler is meant to be attached to an S3 bucket and triggered
+    when objects are placed into that bucket. If the object has an attachment
+    and header that matches what we're expecting, then the CSV attachment
+    will be ingested into DynamoDB.
+    """
+
     for record in event['Records']:
 
         # Fetch email from bucket
