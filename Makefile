@@ -13,3 +13,6 @@ local-processor:
 
 local-upload-sample:
 	awslocal s3 cp sample.email s3://actionnetworkactivistsync.bostondsa.net/sample.email
+
+build:
+	docker build --tag ansync-build -o dist .
