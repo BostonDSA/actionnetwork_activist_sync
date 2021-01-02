@@ -61,7 +61,7 @@ def lambda_handler(event, context):
         with open(download_path) as email_file:
             msg = email.message_from_file(email_file, policy=email.policy.default)
 
-            if os.environ['DSA_KEY'] != msg.get('DsaKey'):
+            if os.environ.get('DSA_KEY') != msg.get('DsaKey'):
                 logger.error('DSA Key not found in email header, aborting.')
                 return
 

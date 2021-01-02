@@ -187,7 +187,8 @@ resource "aws_lambda_function" "an-sync-processor-lambda" {
 
   environment {
     variables = {
-      DRY_RUN = "1"
+      DRY_RUN               = "1"
+      ACTIONNETWORK_API_KEY = aws_secretsmanager_secret.an-sync-secrets.arn
     }
   }
 }
@@ -195,4 +196,9 @@ resource "aws_lambda_function" "an-sync-processor-lambda" {
 resource "aws_cloudwatch_log_group" "an-sync-processor-lambda" {
   name              = "/aws/lambda/${aws_lambda_function.an-sync-processor-lambda.function_name}"
   retention_in_days = 60
+}
+
+# Misc
+resource "aws_secretsmanager_secret" "an-sync-secrets" {
+  name = module.shared.project
 }

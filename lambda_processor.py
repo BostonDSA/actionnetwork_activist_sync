@@ -23,12 +23,20 @@ json_handler.setFormatter(formatter)
 logger.addHandler(json_handler)
 logger.removeHandler(logger.handlers[0])
 
-actionnetwork = ActionNetwork()
-
-dry_run = os.getenv('DRY_RUN', '1') == '1'
+dry_run = os.environ.get('DRY_RUN') == '1'
 
 dynamodb_client = boto3.client('dynamodb')
-if os.environ['ENVIRONMENT'] == 'local':
+secrets_client = boto3.client('secretsmanager')
+
+api_key = os.environ['ACTIONNETWORK_API_KEY']
+if api_key.startswith('arn'):
+    secret = secrets_client.get_secret_value(SecretId=api_key)
+    secret_dict = json.loads(secret['SecretString'])
+    api_key = secret_dict['ACTIONNETWORK_API_KEY']
+
+actionnetwork = ActionNetwork(api_key)
+
+if os.environ.get('ENVIRONMENT') == 'local':
     import localstack_client.session
     dynamodb_client = localstack_client.session.Session().client('dynamodb')
 

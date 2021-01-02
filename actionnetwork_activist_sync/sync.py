@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-'Main' controller that does the sync
+'Main' controller that does the bulk sync
 """
+
+import os
 
 from actionnetwork_activist_sync.actionkit_export import ActionKitExport
 from actionnetwork_activist_sync.actionnetwork import ActionNetwork
@@ -10,9 +12,9 @@ from actionnetwork_activist_sync.field_mapper import FieldMapper
 
 dry_run = False
 
-def sync():
+def sync(api_key):
     """
-    The 'main' function that gets invoked by AWS Lambda.
+    The 'main' function that gets bulk script.
 
     Performs three main tasks:
 
@@ -21,7 +23,7 @@ def sync():
     - Create people who were not on the old list, but are on the new list
     """
 
-    actionnetwork = ActionNetwork()
+    actionnetwork = ActionNetwork(api_key)
 
     # TODO: come up with some system for keeping track of this
     previous_file = open('older.csv', 'r')

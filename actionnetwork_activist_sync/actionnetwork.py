@@ -12,15 +12,7 @@ from pyactionnetwork import ActionNetworkApi
 from actionnetwork_activist_sync.osdi import Person
 
 class ActionNetwork(ActionNetworkApi):
-    """Helper class to interact with the ActionNetwork API
-
-    Expects env var to be set
-    """
-
-    def __init__(self):
-        if not 'ACTIONNETWORK_API_KEY' in os.environ:
-            raise KeyError('Set ACTIONNETWORK_API_KEY env var')
-        super().__init__(os.environ['ACTIONNETWORK_API_KEY'])
+    """Helper class to interact with the ActionNetwork API"""
 
     def remove_member_by_email(self, email):
         """Update custom field that flags membership (is_member)
