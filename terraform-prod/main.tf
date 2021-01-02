@@ -1,3 +1,12 @@
+terraform {
+  backend "s3" {
+    bucket  = "terraform.bostondsa.org"
+    key     = "actionnetwork_activist_sync.tfstate"
+    region  = "us-east-1"
+    profile = "bostondsa"
+  }
+}
+
 provider "aws" {
   profile = "bostondsa"
   region  = "us-east-1"
