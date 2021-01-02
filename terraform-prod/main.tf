@@ -68,8 +68,7 @@ resource "aws_s3_bucket_policy" "an-sync-bucket-policy" {
   policy = data.aws_iam_policy_document.an-sync-bucket-policy.json
 }
 
-resource "aws_s3_bucket_public_access_block" "an-sync-bucket-policy" {
-  # This makes sure we don't accidentally put anything in the bucket publically
+# This makes sure we don't accidentally put anything in the bucket publically
 
 resource "aws_s3_bucket_public_access_block" "an-sync-bucket-policy" {
   bucket = aws_s3_bucket.an-sync-bucket.id
@@ -150,17 +149,10 @@ resource "aws_lambda_permission" "an-sync-incoming-lambda-permission" {
 }
 
 resource "aws_lambda_function" "an-sync-incoming-lambda" {
-  filename         = "../function.zip"
-  source_code_hash = data.archive_file.function.output_base64sha256
+  filename         = "../dist/sync.zip"
+  source_code_hash = filebase64sha256("../dist/sync.zip")
   function_name    = "an-sync-incoming-lambda"
   role             = aws_iam_role.an-sync-incoming-lambda-role.arn
-  handler          = "lambda_function.lambda_handler"
+  handler          = "lambda_ingester.lambda_handler"
   runtime          = "python3.7"
-}
-
-data "archive_file" "function" {
-  # TODO replace with actual build process
-  type        = "zip"
-  source_file = "../lambda_function.py"
-  output_path = "../function.zip"
 }
