@@ -70,6 +70,8 @@ resource "aws_s3_bucket_policy" "an-sync-bucket-policy" {
 
 resource "aws_s3_bucket_public_access_block" "an-sync-bucket-policy" {
   # This makes sure we don't accidentally put anything in the bucket publically
+
+resource "aws_s3_bucket_public_access_block" "an-sync-bucket-policy" {
   bucket = aws_s3_bucket.an-sync-bucket.id
 
   block_public_acls       = true
@@ -79,7 +81,7 @@ resource "aws_s3_bucket_public_access_block" "an-sync-bucket-policy" {
 }
 
 resource "aws_s3_bucket" "an-sync-bucket" {
-  bucket = format("%s.%s", var.bucket, module.shared.domain)
+  bucket = format("%s.%s", module.shared.bucket, module.shared.domain)
   acl    = "private"
 }
 
