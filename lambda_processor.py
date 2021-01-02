@@ -10,7 +10,6 @@ import os
 
 from agate.rows import Row
 import boto3
-import localstack_client.session
 from pythonjsonlogger import jsonlogger
 
 from actionnetwork_activist_sync.actionnetwork import ActionNetwork
@@ -30,6 +29,7 @@ dry_run = os.getenv('DRY_RUN', '1') == '1'
 
 dynamodb_client = boto3.client('dynamodb')
 if os.environ['ENVIRONMENT'] == 'local':
+    import localstack_client.session
     dynamodb_client = localstack_client.session.Session().client('dynamodb')
 
 def lambda_handler(event, context):
