@@ -167,6 +167,14 @@ resource "aws_lambda_function" "an-sync-ingester-lambda" {
   role             = aws_iam_role.an-sync-lambda-role.arn
   handler          = "lambda_ingester.lambda_handler"
   runtime          = "python3.7"
+
+  environment {
+    variables = {
+      LOG_LEVEL = "INFO"
+      DSA_KEY   = aws_secretsmanager_secret.an-sync-secrets.arn
+    }
+  }
+
 }
 
 resource "aws_cloudwatch_log_group" "an-sync-ingester-lambda" {

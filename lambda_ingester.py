@@ -11,7 +11,6 @@ import datetime
 import email
 import email.policy
 import json
-import localstack_client.session
 import logging
 import os
 from pythonjsonlogger import jsonlogger
@@ -22,6 +21,7 @@ from urllib.parse import unquote_plus
 from actionnetwork_activist_sync.state_model import State
 
 logger = logging.getLogger()
+logger.setLevel(os.environ.get('LOG_LEVEL', logging.ERROR))
 json_handler = logging.StreamHandler()
 formatter = jsonlogger.JsonFormatter()
 json_handler.setFormatter(formatter)
@@ -30,10 +30,21 @@ logger.removeHandler(logger.handlers[0])
 
 dynamodb_client = boto3.client('dynamodb')
 s3_client = boto3.client('s3')
+secrets_client = boto3.client('secretsmanager')
 
 if os.environ.get('ENVIRONMENT') == 'local':
+    import localstack_client.session
     dynamodb_client = localstack_client.session.Session().client('dynamodb')
     s3_client = localstack_client.session.Session().client('s3')
+
+dsa_key = os.environ['DSA_KEY']
+if dsa_key.startswith('arn'):
+    secret = secrets_client.get_secret_value(SecretId=dsa_key)
+    secret_dict = json.loads(secret['SecretString'])
+    dsa_key = secret_dict['DSA_KEY']
+    logger.debug('Using DSA key from Secrets Manager')
+else:
+    logger.debug('Using DSA key from Env')
 
 batch = datetime.date.today().strftime('%Y%U')
 
@@ -61,15 +72,15 @@ def lambda_handler(event, context):
         with open(download_path) as email_file:
             msg = email.message_from_file(email_file, policy=email.policy.default)
 
-            if os.environ.get('DSA_KEY') != msg.get('DsaKey'):
+            if dsa_key != msg.get('DsaKey'):
                 logger.error('DSA Key not found in email header, aborting.')
                 return
 
             try:
                 [attach] = [a for a in msg.iter_attachments() if a.get_content_type() == 'application/vnd.ms-excel']
             except(ValueError):
-                # No CSV, something is wrong
-                sys.exit(0)
+                logger.error('Attachment is not CSV')
+                return
 
             csv_lines = attach.get_content().decode().splitlines()
 
