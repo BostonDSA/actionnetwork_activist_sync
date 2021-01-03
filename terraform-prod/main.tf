@@ -129,6 +129,12 @@ data "aws_iam_policy_document" "an-sync-lambda-policy-attach" {
     ]
     resources = [module.shared.db-table.arn, module.shared.db-table.stream_arn]
   }
+  statement {
+    actions = [
+      "secretsmanager:GetSecretValue"
+    ]
+    resources = [aws_secretsmanager_secret.an-sync-secrets.arn]
+  }
 }
 
 resource "aws_iam_policy" "an-sync-lambda-policy-attach" {
@@ -184,11 +190,13 @@ resource "aws_lambda_function" "an-sync-processor-lambda" {
   role             = aws_iam_role.an-sync-lambda-role.arn
   handler          = "lambda_processor.lambda_handler"
   runtime          = "python3.7"
+  timeout          = 60
 
   environment {
     variables = {
       DRY_RUN               = "1"
       ACTIONNETWORK_API_KEY = aws_secretsmanager_secret.an-sync-secrets.arn
+      LOG_LEVEL             = "INFO"
     }
   }
 }
