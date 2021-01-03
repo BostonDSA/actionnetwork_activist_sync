@@ -17,8 +17,9 @@ from actionnetwork_activist_sync.field_mapper import FieldMapper
 from actionnetwork_activist_sync.state_model import State
 
 logger = logging.getLogger()
+logger.setLevel(os.environ.get('LOG_LEVEL', logging.ERROR))
 json_handler = logging.StreamHandler()
-formatter = jsonlogger.JsonFormatter()
+formatter = jsonlogger.JsonFormatter(fmt='%(asctime)s %(levelname)s %(name)s %(message)s')
 json_handler.setFormatter(formatter)
 logger.addHandler(json_handler)
 logger.removeHandler(logger.handlers[0])
@@ -33,6 +34,9 @@ if api_key.startswith('arn'):
     secret = secrets_client.get_secret_value(SecretId=api_key)
     secret_dict = json.loads(secret['SecretString'])
     api_key = secret_dict['ACTIONNETWORK_API_KEY']
+    logger.debug('Using API key from Secrets Manager')
+else:
+    logger.debug('Using API key from Env')
 
 actionnetwork = ActionNetwork(api_key)
 
@@ -46,6 +50,12 @@ def lambda_handler(event, context):
     that has ActionKit CSV rows stored as items. It handles creating new and
     updating existing users.
     """
+
+    logger.info(
+        'Starting to process DynamoDB items', extra={
+            'num_records': len(event['Records']),
+            'dry_run': dry_run
+        })
 
     for record in event['Records']:
         if record['eventName'] != 'INSERT':
