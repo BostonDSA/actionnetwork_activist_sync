@@ -185,9 +185,11 @@ resource "aws_cloudwatch_log_group" "an-sync-ingester-lambda" {
 # Lambda to process the DynamoDB items
 
 resource "aws_lambda_event_source_mapping" "processor" {
-  event_source_arn  = module.shared.db-table.stream_arn
-  function_name     = aws_lambda_function.an-sync-processor-lambda.arn
-  starting_position = "LATEST"
+  event_source_arn       = module.shared.db-table.stream_arn
+  function_name          = aws_lambda_function.an-sync-processor-lambda.arn
+  starting_position      = "LATEST"
+  maximum_retry_attempts = 3
+  batch_size             = 10
 }
 
 resource "aws_lambda_function" "an-sync-processor-lambda" {
