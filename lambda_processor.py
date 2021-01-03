@@ -65,6 +65,9 @@ def lambda_handler(event, context):
         batch = record['dynamodb']['Keys']['batch']['S']
         items = State.query(email, State.batch == batch)
         for item in items:
+            item.status = State.PROCESSING
+            item.save()
+
             from_csv = json.loads(item.raw)
             row = Row(from_csv.values(), from_csv.keys())
             field_mapper = FieldMapper(row)
@@ -84,3 +87,7 @@ def lambda_handler(event, context):
                     logger.info('Updating member', extra={'person_id': field_mapper.person_id})
                     if not dry_run:
                         actionnetwork.update_person(**updated_person)
+
+            if not dry_run:
+                item.status = State.PROCESSED
+                item.save()
