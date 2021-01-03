@@ -10,7 +10,7 @@ from actionnetwork_activist_sync.actionkit_export import ActionKitExport
 
 def get_file(filename):
     """Helper to load Excel test data"""
-    return open(pathlib.Path(__file__).parent / 'data' / filename, 'rb')
+    return open(pathlib.Path(__file__).parent / 'data' / filename, 'r')
 
 
 class TestActionKitExport(unittest.TestCase):
@@ -24,7 +24,7 @@ class TestActionKitExport(unittest.TestCase):
 
     def test_load_valid_files(self):
         """Try to load with test files"""
-        export = ActionKitExport(get_file('01previous.xlsx'), get_file('01current.xlsx'))
+        export = ActionKitExport(get_file('01previous.csv'), get_file('01current.csv'))
         export.load()
         self.assertIsInstance(export.previous, agate.table.Table)
         self.assertIsInstance(export.current, agate.table.Table)
@@ -35,7 +35,7 @@ class TestActionKitExport(unittest.TestCase):
         Previous has two rows, one missing email
         Current has two rows, one missing email
         """
-        export = ActionKitExport(get_file('02previous.xlsx'), get_file('02current.xlsx'))
+        export = ActionKitExport(get_file('02previous.csv'), get_file('02current.csv'))
         export.load()
         export.filter_missing_email()
         self.assertEqual(len(export.missing_email.rows), 1)
@@ -44,7 +44,7 @@ class TestActionKitExport(unittest.TestCase):
 
     def test_get_previous_not_in_current(self):
         """The full happy path"""
-        export = ActionKitExport(get_file('01previous.xlsx'), get_file('01current.xlsx'))
+        export = ActionKitExport(get_file('01previous.csv'), get_file('01current.csv'))
         export.load()
         export.filter_missing_email()
         previous_not_in_current = export.get_previous_not_in_current()
