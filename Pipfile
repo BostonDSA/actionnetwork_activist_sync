@@ -11,6 +11,7 @@ localstack = "*"
 localstack-client = "*"
 pylint = "*"
 python-lambda-local = "*"
+moto = {extras = ["dynamodb2", "s3", "secretsmanager"], version = "*"}
 
 [packages]
 agate = "*"
