@@ -5,24 +5,17 @@ a single rows of an ActionKit export CSV. These rows get synced
 into ActionNetwork via API.
 """
 import json
-import logging
 import os
 
 from agate.rows import Row
 import boto3
-from pythonjsonlogger import jsonlogger
 
 from actionnetwork_activist_sync.actionnetwork import ActionNetwork
+from actionnetwork_activist_sync.logging import get_logger
 from actionnetwork_activist_sync.field_mapper import FieldMapper
 from actionnetwork_activist_sync.state_model import State
 
-logger = logging.getLogger()
-logger.setLevel(os.environ.get('LOG_LEVEL', logging.ERROR))
-json_handler = logging.StreamHandler()
-formatter = jsonlogger.JsonFormatter(fmt='%(asctime)s %(levelname)s %(name)s %(message)s')
-json_handler.setFormatter(formatter)
-logger.addHandler(json_handler)
-logger.removeHandler(logger.handlers[0])
+logger = get_logger(__name__)
 
 dry_run = os.environ.get('DRY_RUN') == '1'
 

@@ -5,28 +5,23 @@ the CSV attachment from the email into DynamoDB items. The CSV attachment
 is of the format that gets exported from ActionKit.
 """
 
+
+
 import boto3
 import csv
 import datetime
 import email
 import email.policy
 import json
-import logging
 import os
-from pythonjsonlogger import jsonlogger
 import sys
 import uuid
 from urllib.parse import unquote_plus
 
+from actionnetwork_activist_sync.logging import get_logger
 from actionnetwork_activist_sync.state_model import State
 
-logger = logging.getLogger()
-logger.setLevel(os.environ.get('LOG_LEVEL', logging.ERROR))
-json_handler = logging.StreamHandler()
-formatter = jsonlogger.JsonFormatter()
-json_handler.setFormatter(formatter)
-logger.addHandler(json_handler)
-logger.removeHandler(logger.handlers[0])
+logger = get_logger(__name__)
 
 dynamodb_client = boto3.client('dynamodb')
 s3_client = boto3.client('s3')
