@@ -68,14 +68,12 @@ def lambda_handler(event, context):
             msg = email.message_from_file(email_file, policy=email.policy.default)
 
             if dsa_key != msg.get('DsaKey'):
-                logger.error('DSA Key not found in email header, aborting.')
-                return
+                raise ValueError('DSA Key not found in email header, aborting.')
 
             try:
                 [attach] = [a for a in msg.iter_attachments() if a.get_content_type() == 'application/vnd.ms-excel']
             except(ValueError):
-                logger.error('Attachment is not CSV')
-                return
+                raise ValueError('Attachment is not CSV')
 
             csv_lines = attach.get_content().decode().splitlines()
 
