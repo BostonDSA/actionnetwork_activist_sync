@@ -96,6 +96,38 @@ class TestPerson(unittest.TestCase):
         except State.DoesNotExist:
             self.fail('Item not found in dynamodb')
 
+    @mock_s3
+    @mock_dynamodb2
+    def test_missing_email_gets_skipped(self):
+        import lambda_ingester
+        from actionnetwork_activist_sync.state_model import State
+
+        csv_data = [
+            ['Email', 'Firstname', 'Lastname'],
+            ['', 'Karl', 'Marx']
+        ]
+
+        fake_file = io.StringIO()
+        csv_f = csv.writer(fake_file)
+        csv_f.writerows(csv_data)
+
+        email = EmailMessage()
+        email['Subject'] = 'ActionNetwork Sync'
+        email['From'] = 'sync@example.com'
+        email['To'] = 'test@example.com'
+        email.add_header('DsaKey', 'TESTKEY')
+        email.add_attachment(
+            fake_file.getvalue().encode(), maintype='text', subtype='csv')
+
+        bucket = 'actionnetworkactivistsync'
+        s3 = boto3.client('s3')
+        s3.create_bucket(Bucket=bucket)
+        s3.put_object(Bucket=bucket,Key='test.email',Body=email.as_bytes())
+
+        State.create_table(billing_mode='PAY_PER_REQUEST')
+        lambda_ingester.lambda_handler(self.get_event(bucket), Context(5))
+        self.assertEqual(0, State.count())
+
     def get_event(self, bucket):
         return {
             'Records': [

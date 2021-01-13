@@ -88,9 +88,9 @@ def lambda_handler(event, context):
             for row in csv.DictReader(csv_lines):
                 d_row = dict(row)
 
-                if not 'Email' in d_row:
+                if not 'Email' in d_row or not d_row['Email']:
                     # We can't continue processing without an email
-                    pass
+                    continue
 
                 state = State(
                     d_row['Email'],
