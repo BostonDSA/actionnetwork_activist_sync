@@ -5,8 +5,6 @@ the CSV attachment from the email into DynamoDB items. The CSV attachment
 is of the format that gets exported from ActionKit.
 """
 
-
-
 import boto3
 import csv
 import datetime

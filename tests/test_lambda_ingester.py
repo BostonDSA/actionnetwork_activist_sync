@@ -1,20 +1,18 @@
 import csv
 from email.message import EmailMessage
 import io
-import logging
 import os
 import unittest
 
-from moto import mock_s3, mock_secretsmanager, mock_dynamodb2
+from moto import mock_s3, mock_dynamodb2
 import boto3
-from lambda_local.main import call
 from lambda_local.context import Context
 
 os.environ['ENVIRONMENT'] = 'TEST'
 os.environ['LOG_LEVEL'] = 'CRITICAL'
 os.environ['DSA_KEY'] = 'TESTKEY'
 
-class TestPerson(unittest.TestCase):
+class TestIngester(unittest.TestCase):
 
     @mock_s3
     def test_email_missing_header(self):
