@@ -21,7 +21,7 @@ from urllib.parse import unquote_plus
 from actionnetwork_activist_sync.logging import get_logger
 from actionnetwork_activist_sync.state_model import State
 
-logger = get_logger(__name__)
+logger = get_logger('lambda_ingester')
 
 dynamodb_client = boto3.client('dynamodb')
 s3_client = boto3.client('s3')

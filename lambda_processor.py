@@ -15,9 +15,9 @@ from actionnetwork_activist_sync.logging import get_logger
 from actionnetwork_activist_sync.field_mapper import FieldMapper
 from actionnetwork_activist_sync.state_model import State
 
-logger = get_logger(__name__)
+logger = get_logger('lambda_processor')
 
-dry_run = os.environ.get('DRY_RUN') == '1'
+dry_run = os.environ.get('DRY_RUN') != '0'
 
 dynamodb_client = boto3.client('dynamodb')
 secrets_client = boto3.client('secretsmanager')
