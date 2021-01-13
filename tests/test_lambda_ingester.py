@@ -10,37 +10,37 @@ import boto3
 from lambda_local.main import call
 from lambda_local.context import Context
 
-from actionnetwork_activist_sync.state_model import State
-
 os.environ['ENVIRONMENT'] = 'TEST'
-os.environ['LOG_LEVEL'] = 'INFO'
+os.environ['LOG_LEVEL'] = 'CRITICAL'
 os.environ['DSA_KEY'] = 'TESTKEY'
-import lambda_ingester
 
 class TestPerson(unittest.TestCase):
 
     @mock_s3
     def test_email_missing_header(self):
+        from lambda_ingester import lambda_handler
+
         email = EmailMessage()
         email['Subject'] = 'Boat for sale'
         email['From'] = 'spam@example.com'
         email['To'] = 'test@example.com'
 
         bucket = 'actionnetworkactivistsync'
-        s3 = boto3.client('s3', region_name='us-east-1')
-        lambda_ingester.s3_client = s3
+        s3 = boto3.client('s3')
         s3.create_bucket(Bucket=bucket)
         s3.put_object(Bucket=bucket,Key='test.email',Body=email.as_bytes())
 
         self.assertRaisesRegex(
             ValueError,
             'DSA Key not found',
-            lambda_ingester.lambda_handler,
+            lambda_handler,
             self.get_event(bucket),
             Context(5))
 
     @mock_s3
     def test_email_attachment_wrong_mime(self):
+        from lambda_ingester import lambda_handler
+
         email = EmailMessage()
         email['Subject'] = 'Boat for sale'
         email['From'] = 'spam@example.com'
@@ -50,20 +50,23 @@ class TestPerson(unittest.TestCase):
             'random text'.encode(), maintype='text', subtype='plain')
 
         bucket = 'actionnetworkactivistsync'
-        s3 = boto3.client('s3', region_name='us-east-1')
-        lambda_ingester.s3_client = s3
+        s3 = boto3.client('s3')
         s3.create_bucket(Bucket=bucket)
         s3.put_object(Bucket=bucket,Key='test.email',Body=email.as_bytes())
 
         self.assertRaisesRegex(
             ValueError,
             'CSV',
-            lambda_ingester.lambda_handler,
+            lambda_handler,
             self.get_event(bucket),
             Context(5))
 
     @mock_s3
+    @mock_dynamodb2
     def test_csv_gets_added_to_db(self):
+        import lambda_ingester
+        from actionnetwork_activist_sync.state_model import State
+
         csv_data = [
             ['Email', 'Firstname', 'Lastname'],
             ['kmarx@marxists.org', 'Karl', 'Marx']
@@ -82,18 +85,16 @@ class TestPerson(unittest.TestCase):
             fake_file.getvalue().encode(), maintype='text', subtype='csv')
 
         bucket = 'actionnetworkactivistsync'
-        s3 = boto3.client('s3', region_name='us-east-1')
-        lambda_ingester.s3_client = s3
+        s3 = boto3.client('s3')
         s3.create_bucket(Bucket=bucket)
         s3.put_object(Bucket=bucket,Key='test.email',Body=email.as_bytes())
 
-        dynamodb = boto3.client('dynamodb', region_name='us-east-1')
-        lambda_ingester.dynamodb_client = dynamodb
-
-        State._get_connection().connection._client = dynamodb
-        lambda_ingester.State = State
-
-        call(lambda_ingester.lambda_handler, self.get_event(bucket), Context(5))
+        State.create_table(billing_mode='PAY_PER_REQUEST')
+        lambda_ingester.lambda_handler(self.get_event(bucket), Context(5))
+        try:
+            State.get('kmarx@marxists.org', range_key=lambda_ingester.batch)
+        except State.DoesNotExist:
+            self.fail('Item not found in dynamodb')
 
     def get_event(self, bucket):
         return {
