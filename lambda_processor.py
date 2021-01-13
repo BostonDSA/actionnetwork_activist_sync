@@ -31,8 +31,6 @@ if api_key.startswith('arn'):
 else:
     logger.debug('Using API key from Env')
 
-actionnetwork = ActionNetwork(api_key)
-
 if os.environ.get('ENVIRONMENT') == 'local':
     import localstack_client.session
     dynamodb_client = localstack_client.session.Session().client('dynamodb')
@@ -43,6 +41,8 @@ def lambda_handler(event, context):
     that has ActionKit CSV rows stored as items. It handles creating new and
     updating existing users.
     """
+
+    actionnetwork = ActionNetwork(api_key)
 
     logger.info(
         'Starting to process DynamoDB items', extra={
