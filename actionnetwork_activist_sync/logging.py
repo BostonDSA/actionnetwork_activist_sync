@@ -8,7 +8,9 @@ def get_logger(name):
 
     # Remove default lambda handler
     if len(logger.handlers):
-        logger.removeHandler(logger.handlers[0])
+        def_handler = logger.handlers[0]
+        logger.removeHandler(def_handler)
+        def_handler.close()
 
     logger.setLevel(os.environ.get('LOG_LEVEL', logging.DEBUG))
 
