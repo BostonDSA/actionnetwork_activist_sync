@@ -12,7 +12,7 @@ def get_logger(name):
         logger.removeHandler(def_handler)
         def_handler.close()
 
-    logger.setLevel(os.environ.get('LOG_LEVEL', logging.DEBUG))
+    logger.setLevel(os.environ.get('ROOT_LOG_LEVEL', logging.ERROR))
 
     formatter = jsonlogger.JsonFormatter(fmt='%(asctime)s %(levelname)s %(name)s %(message)s')
 
@@ -21,4 +21,6 @@ def get_logger(name):
     logger.addHandler(json_handler)
 
     logger = logging.getLogger(name)
+    logger.setLevel(os.environ.get('LOG_LEVEL', logging.DEBUG))
+
     return logger
