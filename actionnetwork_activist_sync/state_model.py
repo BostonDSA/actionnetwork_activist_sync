@@ -16,7 +16,7 @@ class State(Model):
         """
         # set via Terraform
         table_name = 'actionnetwork_activist_sync'
-        host = 'http://localhost:4569' if os.environ.get('ENVIRONMENT') == 'local' \
+        host = 'http://localhost:4566' if os.environ.get('ENVIRONMENT') == 'local' \
             else get_settings_value('host')
 
     email = UnicodeAttribute(hash_key=True)
