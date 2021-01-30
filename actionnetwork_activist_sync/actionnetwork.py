@@ -27,7 +27,7 @@ class ActionNetwork(ActionNetworkApi):
         updated_people = []
         people = self.get_people_by_email(email)
         for person in people:
-            for i in range(0, 3):
+            for _ in range(0, 3):
                 try:
                     response = self.update_person(
                         person_id=person.get_actionnetwork_id(),
@@ -53,7 +53,7 @@ class ActionNetwork(ActionNetworkApi):
             list of Person objects with updated data
         """
 
-        for i in range(0, 3):
+        for _ in range(0, 3):
             try:
                 response = self.get_person(search_string=email)
             except requests.exceptions.ConnectionError:
