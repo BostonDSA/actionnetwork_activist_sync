@@ -64,7 +64,7 @@ class Person:
             phone_numbers=[],
             postal_addresses=[],
             _links=[],
-            custom_fields=[],
+            custom_fields={},
             created_date='',
             modified_date='',
             languages_spoken=[]
