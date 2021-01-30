@@ -18,7 +18,6 @@ from actionnetwork_activist_sync.state_model import State
 logger = get_logger('lambda_processor')
 
 dry_run = os.environ.get('DRY_RUN') != '0'
-
 dynamodb_client = boto3.client('dynamodb')
 secrets_client = boto3.client('secretsmanager')
 
@@ -42,13 +41,16 @@ def lambda_handler(event, context):
     updating existing users.
     """
 
-    actionnetwork = ActionNetwork(api_key)
+    actionnetwork = get_actionnetwork(api_key)
 
     logger.info(
         'Starting to process DynamoDB items', extra={
             'num_records': len(event['Records']),
             'dry_run': dry_run
         })
+
+    new = 0
+    updated = 0
 
     for record in event['Records']:
         if record['eventName'] != 'INSERT':
@@ -69,6 +71,7 @@ def lambda_handler(event, context):
             if len(people) == 0:
                 person = field_mapper.get_actionnetwork_person()
                 logger.info('Creating new member', extra={'email': person['email']})
+                new += 1
                 if not dry_run:
                     actionnetwork.create_person(**person)
             else:
@@ -78,9 +81,15 @@ def lambda_handler(event, context):
                     field_mapper.overrides = existing_person.get_overrides()
 
                     logger.info('Updating member', extra={'person_id': field_mapper.person_id})
+                    updated += 1
                     if not dry_run:
                         actionnetwork.update_person(**updated_person)
 
             if not dry_run:
                 item.status = State.PROCESSED
                 item.save()
+
+    return (new, updated)
+
+def get_actionnetwork(api_key):
+    return ActionNetwork(api_key)
