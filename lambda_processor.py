@@ -59,34 +59,34 @@ def lambda_handler(event, context):
         email = record['dynamodb']['Keys']['email']['S']
         batch = record['dynamodb']['Keys']['batch']['S']
         item = State.get(batch, email)
-            item.status = State.PROCESSING
-            item.save()
+        item.status = State.PROCESSING
+        item.save()
 
-            from_csv = json.loads(item.raw)
-            row = Row(from_csv.values(), from_csv.keys())
-            field_mapper = FieldMapper(row)
-            people = actionnetwork.get_people_by_email(email)
+        from_csv = json.loads(item.raw)
+        row = Row(from_csv.values(), from_csv.keys())
+        field_mapper = FieldMapper(row)
+        people = actionnetwork.get_people_by_email(email)
 
-            if len(people) == 0:
-                person = field_mapper.get_actionnetwork_person()
-                logger.info('Creating new member', extra={'email': person['email']})
-                new += 1
-                if not dry_run:
-                    actionnetwork.create_person(**person)
-            else:
-                for existing_person in people:
-                    field_mapper.person_id = existing_person.get_actionnetwork_id()
-                    updated_person = field_mapper.get_actionnetwork_person()
-                    field_mapper.overrides = existing_person.get_overrides()
-
-                    logger.info('Updating member', extra={'person_id': field_mapper.person_id})
-                    updated += 1
-                    if not dry_run:
-                        actionnetwork.update_person(**updated_person)
-
+        if len(people) == 0:
+            person = field_mapper.get_actionnetwork_person()
+            logger.info('Creating new member', extra={'email': person['email']})
+            new += 1
             if not dry_run:
-                item.status = State.PROCESSED
-                item.save()
+                actionnetwork.create_person(**person)
+        else:
+            for existing_person in people:
+                field_mapper.person_id = existing_person.get_actionnetwork_id()
+                updated_person = field_mapper.get_actionnetwork_person()
+                field_mapper.overrides = existing_person.get_overrides()
+
+                logger.info('Updating member', extra={'person_id': field_mapper.person_id})
+                updated += 1
+                if not dry_run:
+                    actionnetwork.update_person(**updated_person)
+
+        if not dry_run:
+            item.status = State.PROCESSED
+            item.save()
 
     return (new, updated)
 
