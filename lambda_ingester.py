@@ -91,8 +91,8 @@ def lambda_handler(event, context):
                     continue
 
                 state = State(
-                    d_row['Email'],
                     batch,
+                    d_row['Email'],
                     raw=json.dumps(d_row),
                     status=State.UNPROCESSED
                 )

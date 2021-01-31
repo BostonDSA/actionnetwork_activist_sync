@@ -58,8 +58,7 @@ def lambda_handler(event, context):
 
         email = record['dynamodb']['Keys']['email']['S']
         batch = record['dynamodb']['Keys']['batch']['S']
-        items = State.query(email, State.batch == batch)
-        for item in items:
+        item = State.get(batch, email)
             item.status = State.PROCESSING
             item.save()
 

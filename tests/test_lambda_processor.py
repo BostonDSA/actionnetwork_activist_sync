@@ -41,8 +41,8 @@ class TestProcessor(unittest.TestCase):
 
         State.create_table(billing_mode='PAY_PER_REQUEST')
         state = State(
-            'kmarx@marxists.org',
             '202101',
+            'kmarx@marxists.org',
             raw=json.dumps({
                 'Email': 'kmarx@marxists.org',
                 'firstname': 'Karl',
@@ -89,8 +89,8 @@ class TestProcessor(unittest.TestCase):
 
         State.create_table(billing_mode='PAY_PER_REQUEST')
         state = State(
-            'kmarx@marxists.org',
             '202101',
+            'kmarx@marxists.org',
             raw=json.dumps({
                 'Email': 'kmarx@marxists.org',
                 'firstname': 'Karl',

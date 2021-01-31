@@ -19,8 +19,8 @@ class State(Model):
         host = 'http://localhost:4566' if os.environ.get('ENVIRONMENT') == 'local' \
             else get_settings_value('host')
 
-    email = UnicodeAttribute(hash_key=True)
-    batch = UnicodeAttribute(range_key=True)
+    batch = UnicodeAttribute(hash_key=True)
+    email = UnicodeAttribute(range_key=True)
     raw = JSONAttribute()
     status = NumberAttribute(default=0)
 

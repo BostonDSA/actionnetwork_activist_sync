@@ -90,7 +90,7 @@ class TestIngester(unittest.TestCase):
         State.create_table(billing_mode='PAY_PER_REQUEST')
         lambda_ingester.lambda_handler(self.get_event(bucket), Context(5))
         try:
-            State.get('kmarx@marxists.org', range_key=lambda_ingester.batch)
+            State.get(lambda_ingester.batch, range_key='kmarx@marxists.org')
         except State.DoesNotExist:
             self.fail('Item not found in dynamodb')
 
