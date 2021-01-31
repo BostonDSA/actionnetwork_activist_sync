@@ -19,7 +19,7 @@ local-processor:
 
 # Tests
 test:
-	pipenv run python3 -m unittest
+	pipenv run green
 
 # Releasing
 
