@@ -62,6 +62,9 @@ def lambda_handler(event, context):
     cur_emails = [c.email for c in cur_items]
     prev_emails = [p.email for p in prev_items]
 
+    if cur_count == 0 or len(cur_emails) == 0:
+        raise RuntimeError('No current batch, something is probably wrong. Aborting')
+
     logger.info(
         'Checking previous email list against current',
         extra={
