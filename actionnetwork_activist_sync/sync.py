@@ -3,8 +3,6 @@
 'Main' controller that does the bulk sync
 """
 
-import os
-
 from actionnetwork_activist_sync.actionkit_export import ActionKitExport
 from actionnetwork_activist_sync.actionnetwork import ActionNetwork
 from actionnetwork_activist_sync.debug import PersonCompare

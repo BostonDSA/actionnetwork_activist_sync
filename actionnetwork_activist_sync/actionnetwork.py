@@ -4,7 +4,6 @@
 https://actionnetwork.org/docs
 """
 
-import os
 import time
 import requests
 

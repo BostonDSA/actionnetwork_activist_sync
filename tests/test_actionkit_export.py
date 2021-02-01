@@ -71,4 +71,3 @@ class TestActionKitExport(unittest.TestCase):
 
         prev.close()
         cur.close()
-

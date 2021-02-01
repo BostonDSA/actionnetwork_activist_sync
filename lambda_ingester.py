@@ -5,16 +5,16 @@ the CSV attachment from the email into DynamoDB items. The CSV attachment
 is of the format that gets exported from ActionKit.
 """
 
-import boto3
 import csv
 import datetime
 import email
 import email.policy
 import json
 import os
-import sys
 import uuid
 from urllib.parse import unquote_plus
+
+import boto3
 
 from actionnetwork_activist_sync.logging import get_logger
 from actionnetwork_activist_sync.state_model import State
@@ -68,10 +68,7 @@ def lambda_handler(event, context):
             if dsa_key != msg.get('DsaKey'):
                 raise ValueError('DSA Key not found in email header, aborting.')
 
-            try:
-                attach = next(msg.iter_attachments())
-            except(StopIteration):
-                raise StopIteration('No attachements')
+            attach = next(msg.iter_attachments())
 
             if not attach.get_content_type() == 'text/csv':
                 logger.error(
@@ -86,7 +83,7 @@ def lambda_handler(event, context):
             for row in csv.DictReader(csv_lines):
                 d_row = dict(row)
 
-                if not 'Email' in d_row or not d_row['Email']:
+                if 'Email' not in d_row or not d_row['Email']:
                     # We can't continue processing without an email
                     continue
 

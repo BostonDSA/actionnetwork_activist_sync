@@ -2,8 +2,7 @@
 """Test field conversions"""
 
 from datetime import datetime
-from decimal import *
-from pprint import pprint
+from decimal import Decimal
 import unittest
 
 from agate import Row

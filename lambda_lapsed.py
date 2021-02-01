@@ -8,12 +8,10 @@ import datetime
 import json
 import os
 
-from agate.rows import Row
 import boto3
 
 from actionnetwork_activist_sync.actionnetwork import ActionNetwork
 from actionnetwork_activist_sync.logging import get_logger
-from actionnetwork_activist_sync.field_mapper import FieldMapper
 from actionnetwork_activist_sync.state_model import State
 
 logger = get_logger('lambda_lapsed')
@@ -41,8 +39,7 @@ prev_batch = last_week.strftime('%Y%U')
 
 def lambda_handler(event, context):
     """
-    Detect changes
-    Flip is_member
+    This lambda is intended to get triggered on a schdule via CloudWatch.
     """
 
     removed = 0
@@ -87,5 +84,9 @@ def lambda_handler(event, context):
 
     return (removed, cur_count, prev_count)
 
-def get_actionnetwork(api_key):
-    return ActionNetwork(api_key)
+def get_actionnetwork(api_k):
+    """Creates an ActionNetwork object.
+
+    This function is a helper for mocking in tests"""
+
+    return ActionNetwork(api_k)

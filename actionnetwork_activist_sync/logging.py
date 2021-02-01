@@ -1,13 +1,21 @@
+"""
+Helpers for configuring logging in the lambdas
+"""
+
 import logging
 import os
 
 from pythonjsonlogger import jsonlogger
 
 def get_logger(name):
+    """
+    Get a preconfigured logger
+    """
+
     logger = logging.getLogger()
 
     # Remove default lambda handler
-    if len(logger.handlers):
+    if len(logger.handlers) > 0:
         def_handler = logger.handlers[0]
         logger.removeHandler(def_handler)
         def_handler.close()

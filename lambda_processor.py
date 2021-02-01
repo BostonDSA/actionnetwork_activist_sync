@@ -90,5 +90,9 @@ def lambda_handler(event, context):
 
     return (new, updated)
 
-def get_actionnetwork(api_key):
-    return ActionNetwork(api_key)
+def get_actionnetwork(api_k):
+    """Creates an ActionNetwork object.
+
+    This function is a helper for mocking in tests"""
+
+    return ActionNetwork(api_k)

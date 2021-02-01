@@ -81,6 +81,13 @@ class Person:
         self.modified_date = modified_date
         self.languages_spoken = languages_spoken
 
+        # Gets set with merge methods
+        self.email = None
+        self.address = None
+        self.city = None
+        self.state = None
+        self.postal_code = None
+
     def get_actionnetwork_id(self):
         """Returns the ActionNetwork ID"""
 

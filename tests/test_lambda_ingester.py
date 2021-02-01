@@ -141,4 +141,3 @@ class TestIngester(unittest.TestCase):
                 }
             ]
         }
-

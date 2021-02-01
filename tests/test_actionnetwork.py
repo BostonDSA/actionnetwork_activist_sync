@@ -14,7 +14,7 @@ class TestActionNetwork(unittest.TestCase):
     """
 
     def setUp(self):
-        self.actionnetwork = ActionNetwork()
+        self.actionnetwork = ActionNetwork('API_KEY')
         self.email = 'tech+fake@bostondsa.org'
 
     def test_remove_member_by_email(self):

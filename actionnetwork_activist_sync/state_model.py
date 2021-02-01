@@ -1,3 +1,7 @@
+"""
+pynamodb model
+"""
+
 import os
 from pynamodb.models import Model
 from pynamodb.attributes import (

@@ -4,7 +4,6 @@
 import io
 
 import agate
-import agateexcel
 
 class ActionKitExport:
     """ActionKitExport converts two ActionKit Excel spreadsheets.

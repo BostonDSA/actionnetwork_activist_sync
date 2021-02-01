@@ -1,8 +1,14 @@
+"""
+Helpers for debugging
+"""
+
 from colored import attr, fg
 from dictdiffer import diff
-from pprint import pprint
 
 class PersonCompare:
+    """
+    This compares two Person objects and visually shows what changed
+    """
 
     def __init__(self, existing, updated):
         self.existing = existing
@@ -11,6 +17,13 @@ class PersonCompare:
         self.updated = updated
 
     def print_diff(self):
+        """
+        Pretty prints difference between two people in columns.
+
+        Added: White | Green
+        Removed: Red | White
+        Changed: Yellow
+        """
 
         ignore = [
             'identifiers',
@@ -44,7 +57,7 @@ class PersonCompare:
                 right = None
                 right_color = None
             else:
-                raise NotImplemented
+                raise NotImplementedError
 
             print(fmt_str.format(
                 left_color, left, attr('reset'), right_color, right, attr('reset')))
