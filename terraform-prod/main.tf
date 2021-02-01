@@ -216,7 +216,47 @@ resource "aws_cloudwatch_log_group" "an-sync-processor-lambda" {
   retention_in_days = 60
 }
 
+# Lambda to process membership lapses
+
+resource "aws_cloudwatch_event_rule" "an-sync-lapsed" {
+  name        = "an-sync-lapsed"
+  description = "Weekly job to trigger lapsed lambda"
+  # Tuesday 7pm
+  schedule_expression = "cron(0 19 * * 2)"
+}
+
+resource "aws_cloudwatch_event_target" "an-sync-lapsed" {
+  rule      = aws_cloudwatch_event_rule.an-sync-lapsed.name
+  target_id = "an-sync-trigger-lambda"
+  arn       = aws_lambda_function.an-sync-lapsed-lambda.arn
+}
+
+resource "aws_lambda_function" "an-sync-lapsed-lambda" {
+  description      = "Action Network Sync Lapsed Memberships (Step 3)"
+  filename         = "../dist/sync.zip"
+  source_code_hash = filebase64sha256("../dist/sync.zip")
+  function_name    = "an-sync-lapsed-lambda"
+  role             = aws_iam_role.an-sync-lambda-role.arn
+  handler          = "lambda_lapsed.lambda_handler"
+  runtime          = "python3.7"
+  timeout          = 600
+
+  environment {
+    variables = {
+      DRY_RUN               = "1"
+      ACTIONNETWORK_API_KEY = aws_secretsmanager_secret.an-sync-secrets.arn
+      LOG_LEVEL             = "INFO"
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_group" "an-sync-lapsed-lambda" {
+  name              = "/aws/lambda/${aws_lambda_function.an-sync-lapsed-lambda.function_name}"
+  retention_in_days = 60
+}
+
 # Misc
+
 resource "aws_secretsmanager_secret" "an-sync-secrets" {
   name = module.shared.project
 }
