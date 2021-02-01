@@ -23,7 +23,6 @@ def sync(api_key):
 
     actionnetwork = ActionNetwork(api_key)
 
-    # TODO: come up with some system for keeping track of this
     previous_file = open('older.csv', 'r')
     current_file = open('newer.csv', 'r')
 
@@ -31,17 +30,21 @@ def sync(api_key):
     actionkit_export.load()
     actionkit_export.filter_missing_email()
 
+    no_email = 0
+    lapsed = 0
+    new_member = 0
+    existing_member = 0
+
     for row in actionkit_export.missing_email.rows:
         print('Missing email: {} {}'.format(row['first_name'], row['last_name']))
-        if not dry_run:
-            # TODO: figure out named based matching
-            pass
+        no_email += 1
 
     # People where are no longer in the current spreadsheet, but were
     # in the previous one have had their membership lapse.
 
     for row in actionkit_export.get_previous_not_in_current().rows:
         print('Toggle membership flag: {}'.format(row['Email']))
+        lapsed += 1
         if not dry_run:
             actionnetwork.remove_member_by_email(row['Email'])
 
@@ -52,6 +55,7 @@ def sync(api_key):
         if len(people) == 0:
             person = field_mapper.get_actionnetwork_person()
             print('New member: {}'.format(person['email']))
+            new_member += 1
             if not dry_run:
                 actionnetwork.create_person(**person)
         else:
@@ -61,6 +65,7 @@ def sync(api_key):
                 field_mapper.overrides = existing_person.get_overrides()
 
                 print('Updating person: {}'.format(field_mapper.person_id))
+                existing_member += 1
                 comp = PersonCompare(existing_person, updated_person)
                 comp.print_diff()
                 print()
@@ -71,6 +76,8 @@ def sync(api_key):
     current_file.close()
 
     return {
-        'statusCode': 200,
-        'body': 'Sync Complete'
+        'no_email': no_email,
+        'lapsed': lapsed,
+        'new_member': new_member,
+        'existing_member': existing_member
     }
