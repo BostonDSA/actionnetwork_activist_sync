@@ -32,7 +32,7 @@ class TestLapsed(unittest.TestCase):
             lambda_lapsed.cur_batch,
             'kmarx@marxists.org',
             raw=j_karl,
-            status=State.UNPROCESSED
+            status=State.PROCESSED
         )
         cur_karl.save()
 
@@ -52,6 +52,42 @@ class TestLapsed(unittest.TestCase):
         self.assertEqual(rem, 0)
         self.assertEqual(cur, 1)
         self.assertEqual(prev, 1)
+
+    @mock_dynamodb2
+    def test_in_both_but_unprocessed_errors(self):
+        import lambda_lapsed
+        from actionnetwork_activist_sync.actionnetwork import ActionNetwork
+        from actionnetwork_activist_sync.state_model import State
+
+        State.create_table(billing_mode='PAY_PER_REQUEST')
+
+        j_karl = json.dumps({
+                'Email': 'kmarx@marxists.org',
+                'firstname': 'Karl',
+                'lastname': 'Marx'
+        })
+
+        cur_karl = State(
+            lambda_lapsed.cur_batch,
+            'kmarx@marxists.org',
+            raw=j_karl,
+            status=State.UNPROCESSED
+        )
+        cur_karl.save()
+
+        prev_karl = State(
+            lambda_lapsed.prev_batch,
+            'kmarx@marxists.org',
+            raw=j_karl,
+            status=State.PROCESSED
+        )
+        prev_karl.save()
+
+        mock_an = Mock(ActionNetwork)
+        lambda_lapsed.get_actionnetwork = lambda a: mock_an
+
+        with self.assertRaises(RuntimeError):
+            lambda_lapsed.lambda_handler({}, Context(5))
 
     @mock_dynamodb2
     def test_in_cur_but_not_in_prev_is_noop(self):

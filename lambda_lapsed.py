@@ -49,12 +49,12 @@ def lambda_handler(event, context):
     cur_count = State.count(hash_key=cur_batch)
     prev_count = State.count(hash_key=prev_batch)
 
-    cur_items = State.query(hash_key=cur_batch)
+    cur_items = State.query(hash_key=cur_batch, filter_condition=State.status == State.PROCESSED)
     logger.info(
         'Loaded current items.',
         extra={'cur_batch': cur_batch, 'num_items': cur_count})
 
-    prev_items = State.query(hash_key=prev_batch)
+    prev_items = State.query(hash_key=prev_batch, filter_condition=State.status == State.PROCESSED)
     logger.info(
         'Loaded previous items.',
         extra={'prev_batch': prev_batch, 'num_items': prev_count})
