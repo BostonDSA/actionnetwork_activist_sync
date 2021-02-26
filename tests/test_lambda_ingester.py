@@ -3,6 +3,7 @@ from email.message import EmailMessage
 import io
 import os
 import unittest
+import zipfile
 
 from moto import mock_s3, mock_dynamodb2
 import boto3
@@ -54,7 +55,7 @@ class TestIngester(unittest.TestCase):
 
         self.assertRaisesRegex(
             ValueError,
-            'CSV',
+            'ZIP',
             lambda_handler,
             self.get_event(bucket),
             Context(5))
@@ -70,9 +71,7 @@ class TestIngester(unittest.TestCase):
             ['kmarx@marxists.org', 'Karl', 'Marx']
         ]
 
-        fake_file = io.StringIO()
-        csv_f = csv.writer(fake_file)
-        csv_f.writerows(csv_data)
+        fake_zip = self.get_zipped_csv(csv_data)
 
         email = EmailMessage()
         email['Subject'] = 'ActionNetwork Sync'
@@ -80,7 +79,7 @@ class TestIngester(unittest.TestCase):
         email['To'] = 'test@example.com'
         email.add_header('DsaKey', 'TESTKEY')
         email.add_attachment(
-            fake_file.getvalue().encode(), maintype='text', subtype='csv')
+            fake_zip.getvalue(), maintype='application', subtype='zip')
 
         bucket = 'actionnetworkactivistsync'
         s3 = boto3.client('s3')
@@ -105,9 +104,7 @@ class TestIngester(unittest.TestCase):
             ['', 'Karl', 'Marx']
         ]
 
-        fake_file = io.StringIO()
-        csv_f = csv.writer(fake_file)
-        csv_f.writerows(csv_data)
+        fake_zip = self.get_zipped_csv(csv_data)
 
         email = EmailMessage()
         email['Subject'] = 'ActionNetwork Sync'
@@ -115,7 +112,7 @@ class TestIngester(unittest.TestCase):
         email['To'] = 'test@example.com'
         email.add_header('DsaKey', 'TESTKEY')
         email.add_attachment(
-            fake_file.getvalue().encode(), maintype='text', subtype='csv')
+            fake_zip.getvalue(), maintype='application', subtype='zip', filename='test.zip')
 
         bucket = 'actionnetworkactivistsync'
         s3 = boto3.client('s3')
@@ -125,6 +122,7 @@ class TestIngester(unittest.TestCase):
         State.create_table(billing_mode='PAY_PER_REQUEST')
         lambda_ingester.lambda_handler(self.get_event(bucket), Context(5))
         self.assertEqual(0, State.count())
+        fake_zip.close()
 
     def get_event(self, bucket):
         return {
@@ -141,3 +139,14 @@ class TestIngester(unittest.TestCase):
                 }
             ]
         }
+
+    def get_zipped_csv(self, csv_data):
+        fake_csv = io.StringIO()
+        csv_f = csv.writer(fake_csv)
+        csv_f.writerows(csv_data)
+
+        fake_zip = io.BytesIO()
+        z = zipfile.ZipFile(fake_zip, 'w')
+        z.writestr('test.csv', fake_csv.getvalue())
+        z.close()
+        return fake_zip

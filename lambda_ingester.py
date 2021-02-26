@@ -9,10 +9,12 @@ import csv
 import datetime
 import email
 import email.policy
+import io
 import json
 import os
 import uuid
 from urllib.parse import unquote_plus
+import zipfile
 
 import boto3
 
@@ -61,23 +63,33 @@ def lambda_handler(event, context):
             extra={"bucket": bucket, "key": key, "download_path": download_path})
         s3_client.download_file(bucket, key, download_path)
 
-        # Parse email and CSV attachment
         with open(download_path) as email_file:
+            # The full email gets deposited in the S3 bucket
             msg = email.message_from_file(email_file, policy=email.policy.default)
 
             if dsa_key != msg.get('DsaKey'):
                 raise ValueError('DSA Key not found in email header, aborting.')
 
+            # ActionKit mails the report as an attached ZIP file
             attach = next(msg.iter_attachments())
 
-            if not attach.get_content_type() == 'text/csv':
+            if not attach.get_content_type() == 'application/zip':
                 logger.error(
-                    'Attachment is not CSV',
+                    'Attachment is not ZIP',
                     extra={'content_type': attach.get_content_type()})
-                raise ValueError('Attachment is not CSV')
+                raise ValueError('Attachment is not ZIP')
 
-            # decode()
-            csv_lines = attach.get_content().splitlines()
+            zip_data = io.BytesIO(attach.get_content())
+
+            with zipfile.ZipFile(zip_data) as zip:
+                names = zip.namelist()
+                if len(names) != 1:
+                    raise ValueError('ZIP archive has wrong number of files')
+
+                if not names[0].endswith('.csv'):
+                    raise ValueError('ZIP archive is missing CSV file')
+
+                csv_lines = io.StringIO(zip.read(names[0]).decode('utf-8'))
 
             count = 0
             for row in csv.DictReader(csv_lines):
