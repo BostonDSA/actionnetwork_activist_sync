@@ -27,16 +27,16 @@ class FieldMapper:
         """Main conversion method"""
 
         address = []
-        if self.exported_person.get('Mailing_Address1'):
-            address.append(self.exported_person.get('Mailing_Address1'))
+        if self.exported_person.get('Billing_Address_Line_1'):
+            address.append(self.exported_person.get('Billing_Address_Line_1'))
 
         person = {
             'email': self.exported_person.get('Email'),
             'given_name': self.exported_person.get('first_name', default=''),
             'family_name': self.exported_person.get('last_name', default=''),
             'address': address,
-            'city': self.exported_person.get('Mailing_City', default=''),
-            'state': self.exported_person.get('Mailing_State', default=''),
+            'city': self.exported_person.get('Billing_City', default=''),
+            'state': self.exported_person.get('Billing_State', default=''),
             'country': 'US', # no country field in export
             'postal_code': self.get_postal_code(),
             'custom_fields': self.get_custom_fields()
@@ -76,7 +76,7 @@ class FieldMapper:
     def get_postal_code(self):
         """Normalizes postal code data"""
 
-        postal_code = self.exported_person.get('Mailing_Zip', default='')
+        postal_code = self.exported_person.get('Billing_Zip', default='')
         if postal_code and len(postal_code) < 5 and postal_code.isnumeric():
             postal_code = f'{postal_code:0>5}'
 
@@ -86,7 +86,7 @@ class FieldMapper:
         """Formats custom fields"""
 
         custom_fields = {
-            'Address Line 2': self.exported_person.get('Mailing_Address2'),
+            'Address Line 2': self.exported_person.get('Billing_Address_Line_2'),
             'AK_ID': self.exported_person.get('AK_ID'),
             'BDSA Xdate': self.exported_person.get('Xdate'),
             'Do Not Call': self.exported_person.get('Do_Not_Call'),
