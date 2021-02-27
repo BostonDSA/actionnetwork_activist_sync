@@ -27,17 +27,17 @@ class FieldMapper:
         """Main conversion method"""
 
         address = []
-        if self.exported_person.get('Address_Line_1'):
-            address.append(self.exported_person.get('Address_Line_1'))
+        if self.exported_person.get('Mailing_Address1'):
+            address.append(self.exported_person.get('Mailing_Address1'))
 
         person = {
             'email': self.exported_person.get('Email'),
             'given_name': self.exported_person.get('first_name', default=''),
             'family_name': self.exported_person.get('last_name', default=''),
             'address': address,
-            'city': self.exported_person.get('City', default=''),
-            'state': self.exported_person.get('State', default=''),
-            'country': self.exported_person.get('Country', default=''),
+            'city': self.exported_person.get('Mailing_City', default=''),
+            'state': self.exported_person.get('Mailing_State', default=''),
+            'country': 'US', # no country field in export
             'postal_code': self.get_postal_code(),
             'custom_fields': self.get_custom_fields()
         }
@@ -76,7 +76,7 @@ class FieldMapper:
     def get_postal_code(self):
         """Normalizes postal code data"""
 
-        postal_code = self.exported_person.get('Zip', default='')
+        postal_code = self.exported_person.get('Mailing_Zip', default='')
         if postal_code and len(postal_code) < 5 and postal_code.isnumeric():
             postal_code = f'{postal_code:0>5}'
 
@@ -86,7 +86,7 @@ class FieldMapper:
         """Formats custom fields"""
 
         custom_fields = {
-            'Address Line 2': self.exported_person.get('Address_Line_2'),
+            'Address Line 2': self.exported_person.get('Mailing_Address2'),
             'AK_ID': self.exported_person.get('AK_ID'),
             'BDSA Xdate': self.exported_person.get('Xdate'),
             'Do Not Call': self.exported_person.get('Do_Not_Call'),
@@ -96,11 +96,16 @@ class FieldMapper:
             'Mail Preference': self.exported_person.get('Mail_preference'),
             'Middle Name': self.exported_person.get('middle_name'),
             'Phone': self.get_phone(),
-            'is_member': self.is_member
-            # TODO: not currently in AN, but in AK
-            # 'Memb_status': self.exported_person.get('Memb_status'),
-            # 'membership_type': self.exported_person.get('membership_type'),
-            # 'monthly_status': self.exported_person.get('monthly_status')
+            'is_member': self.is_member,
+            'membership_type': self.exported_person.get('membership_type'),
+            'membership_status': self.exported_person.get('membership_status'),
+            'monthly_dues_status': self.exported_person.get('monthly_dues_status'),
+            'union_member': self.exported_person.get('union_member'),
+            'union_name': self.exported_person.get('union_name'),
+            'union_local': self.exported_person.get('union_local'),
+            'student_yes_no': self.exported_person.get('student_yes_no'),
+            'student_school_name': self.exported_person.get('student_school_name'),
+            'YDSA Chapter': self.exported_person.get('YDSA Chapter')
         }
 
         # filter None

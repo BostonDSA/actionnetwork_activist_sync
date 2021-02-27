@@ -37,7 +37,7 @@ class TestFieldMapper(unittest.TestCase):
     def test_get_postal_code(self, raw, expected):
         """Test known zip formats"""
 
-        field_mapper = FieldMapper(Row([raw], ['Zip']))
+        field_mapper = FieldMapper(Row([raw], ['Mailing_Zip']))
         actual = field_mapper.get_postal_code()
         self.assertEqual(expected, actual)
 
@@ -54,7 +54,7 @@ class TestFieldMapper(unittest.TestCase):
         self.assertEqual('6176666666', person['custom_fields']['Phone'])
 
     @data(
-        ('Address_Line_2', 'Apt 123', 'Address Line 2', 'Apt 123'),
+        ('Mailing_Address2', 'Apt 123', 'Address Line 2', 'Apt 123'),
         ('AK_ID', Decimal(1), 'AK_ID', '1'),
         ('Join_Date', datetime(2020, 1, 9), 'Join Date', '2020-01-09 00:00:00')
     )
