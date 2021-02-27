@@ -170,8 +170,9 @@ resource "aws_lambda_function" "an-sync-ingester-lambda" {
 
   environment {
     variables = {
-      LOG_LEVEL = "INFO"
+      DRY_RUN   = module.shared.dry-run-ingester
       DSA_KEY   = aws_secretsmanager_secret.an-sync-secrets.arn
+      LOG_LEVEL = "INFO"
     }
   }
 
@@ -204,8 +205,8 @@ resource "aws_lambda_function" "an-sync-processor-lambda" {
 
   environment {
     variables = {
-      DRY_RUN               = "1"
       ACTIONNETWORK_API_KEY = aws_secretsmanager_secret.an-sync-secrets.arn
+      DRY_RUN               = module.shared.dry-run-processor
       LOG_LEVEL             = "INFO"
     }
   }
@@ -243,8 +244,8 @@ resource "aws_lambda_function" "an-sync-lapsed-lambda" {
 
   environment {
     variables = {
-      DRY_RUN               = "1"
       ACTIONNETWORK_API_KEY = aws_secretsmanager_secret.an-sync-secrets.arn
+      DRY_RUN               = module.shared.dry-run-lapsed
       LOG_LEVEL             = "INFO"
     }
   }

@@ -9,3 +9,15 @@ variable "domain" {
 variable "bucket" {
   default = "actionnetworkactivistsync"
 }
+
+variable "dry-run-ingester" {
+  default = "1"
+}
+
+variable "dry-run-processor" {
+  default = "1"
+}
+
+variable "dry-run-lapsed" {
+  default = "1"
+}
