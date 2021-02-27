@@ -73,7 +73,7 @@ def lambda_handler(event, context):
             # ActionKit mails the report as an attached ZIP file
             attach = next(msg.iter_attachments())
 
-            if not attach.get_content_type() == 'application/zip':
+            if not attach.get_content_type() in ['application/zip', 'application/x-zip-compressed']:
                 logger.error(
                     'Attachment is not ZIP',
                     extra={'content_type': attach.get_content_type()})
