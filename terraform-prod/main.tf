@@ -223,7 +223,7 @@ resource "aws_cloudwatch_event_rule" "an-sync-lapsed" {
   name        = "an-sync-lapsed"
   description = "Weekly job to trigger lapsed lambda"
   # Tuesday 7pm
-  schedule_expression = "cron(0 19 ? * 2 *)"
+  schedule_expression = "cron(0 19 ? * 3 *)"
 }
 
 resource "aws_cloudwatch_event_target" "an-sync-lapsed" {
