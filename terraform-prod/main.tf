@@ -219,6 +219,40 @@ resource "aws_cloudwatch_log_group" "an-sync-processor-lambda" {
 
 # Lambda to process membership lapses
 
+data "aws_iam_policy_document" "an-sync-cw-event-assume" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
+    }
+  }
+}
+
+data "aws_iam_policy_document" "an-sync-cw-event-invoke" {
+  statement {
+    actions = [
+      "lambda:InvokeFunction"
+    ]
+    resources = [aws_lambda_function.an-sync-lapsed-lambda.arn]
+  }
+}
+
+resource "aws_iam_policy" "an-sync-cw-event" {
+  policy = data.aws_iam_policy_document.an-sync-cw-event-invoke.json
+}
+
+resource "aws_iam_role" "an-sync-cw-event" {
+  name               = "an-sync-cw-event"
+  assume_role_policy = data.aws_iam_policy_document.an-sync-cw-event-assume.json
+}
+
+resource "aws_iam_role_policy_attachment" "an-sync-cw-event" {
+  role       = aws_iam_role.an-sync-cw-event.name
+  policy_arn = aws_iam_policy.an-sync-cw-event.arn
+}
+
 resource "aws_cloudwatch_event_rule" "an-sync-lapsed" {
   name        = "an-sync-lapsed"
   description = "Weekly job to trigger lapsed lambda"
