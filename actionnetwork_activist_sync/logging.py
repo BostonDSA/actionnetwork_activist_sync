@@ -4,6 +4,7 @@ Helpers for configuring logging in the lambdas
 
 import logging
 import os
+import sys
 
 from pythonjsonlogger import jsonlogger
 
@@ -30,5 +31,11 @@ def get_logger(name):
 
     logger = logging.getLogger(name)
     logger.setLevel(os.environ.get('LOG_LEVEL', logging.DEBUG))
+
+    def handle_exception(exc_type, exc_value, exc_traceback):
+        logger.error("EXCEPTION", exc_info=(exc_type, exc_value, exc_traceback))
+
+    sys.excepthook = handle_exception
+
 
     return logger
