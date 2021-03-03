@@ -10,10 +10,6 @@ output "bucket" {
   value = var.bucket
 }
 
-output "dry-run-ingester" {
-  value = var.dry-run-ingester
-}
-
 output "dry-run-processor" {
   value = var.dry-run-processor
 }
