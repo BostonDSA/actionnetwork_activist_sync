@@ -43,9 +43,17 @@ def lambda_handler(event, context):
 
     actionnetwork = get_actionnetwork(api_key)
 
+    eventNames = {
+        'INSERT': 0,
+        'MODIFY': 0,
+        'REMOVE': 0
+    }
+    for record in event['Records']:
+        eventNames[record['eventName']] += 1
+
     logger.info(
         'Starting to process DynamoDB items', extra={
-            'num_records': len(event['Records']),
+            'num_records': eventNames,
             'dry_run': dry_run
         })
 
@@ -79,15 +87,21 @@ def lambda_handler(event, context):
                 updated_person = field_mapper.get_actionnetwork_person()
                 field_mapper.overrides = existing_person.get_overrides()
 
-                logger.info('Updating member', extra={'person_id': field_mapper.person_id})
+                logger.info('Updating member', extra={
+                    'person_id': field_mapper.person_id,
+                    'email': email
+                    })
                 updated += 1
                 if not dry_run:
                     actionnetwork.update_person(**updated_person)
 
-        if not dry_run:
-            item.status = State.PROCESSED
-            item.save()
+        item.status = State.PROCESSED
+        item.save()
 
+    logger.info('Finished processing batch of records', extra={
+        'new': new,
+        'update': updated
+    })
     return (new, updated)
 
 def get_actionnetwork(api_k):
