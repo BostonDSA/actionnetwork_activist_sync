@@ -167,6 +167,8 @@ resource "aws_lambda_function" "an-sync-ingester-lambda" {
   role             = aws_iam_role.an-sync-lambda-role.arn
   handler          = "lambda_ingester.lambda_handler"
   runtime          = "python3.7"
+  timeout          = 300
+
 
   environment {
     variables = {
