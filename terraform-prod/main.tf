@@ -169,7 +169,6 @@ resource "aws_lambda_function" "an-sync-ingester-lambda" {
   runtime          = "python3.7"
   timeout          = 300
 
-
   environment {
     variables = {
       DSA_KEY   = aws_secretsmanager_secret.an-sync-secrets.arn
@@ -210,6 +209,10 @@ resource "aws_lambda_function" "an-sync-processor-lambda" {
       DRY_RUN               = module.shared.dry-run-processor
       LOG_LEVEL             = "INFO"
     }
+  }
+
+  lifecycle {
+    ignore_changes = [environment]
   }
 }
 
@@ -283,6 +286,10 @@ resource "aws_lambda_function" "an-sync-lapsed-lambda" {
       DRY_RUN               = module.shared.dry-run-lapsed
       LOG_LEVEL             = "INFO"
     }
+  }
+
+  lifecycle {
+    ignore_changes = [environment]
   }
 }
 
