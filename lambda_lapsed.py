@@ -60,7 +60,15 @@ def lambda_handler(event, context):
     prev_emails = [p.email for p in prev_items]
 
     if cur_count == 0 or len(cur_emails) == 0:
-        raise RuntimeError('No current batch, something is probably wrong. Aborting')
+        errMsg = 'No current batch, something is probably wrong. Aborting.'
+        logger.error(errMsg)
+        raise RuntimeError(errMsg)
+
+    if prev_count == 0 or len(prev_emails) == 0:
+        errMsg = 'No previous batch. If this is not the first week, then something is probably wrong. Aborting.'
+        logger.error(errMsg)
+        raise RuntimeError(errMsg)
+
 
     logger.info(
         'Checking previous email list against current',
@@ -82,6 +90,13 @@ def lambda_handler(event, context):
                 action_network.remove_member_by_email(prev_email)
             removed += 1
 
+    logger.info(
+        'Finished removing lapsed members.',
+        extra={
+            'removed': removed,
+            'cur_count': cur_count,
+            'prev_count': prev_count
+        })
     return (removed, cur_count, prev_count)
 
 def get_actionnetwork(api_k):
