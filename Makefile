@@ -1,23 +1,33 @@
-# Developer Ingest
-local-ingest: local-init-ingest local-upload-sample local-ingest-run
+# Developer
 
-local-init-ingest:
+local-init:
 	-pipenv shell
 	docker-compose up -d
 	terraform -chdir=terraform-dev init
 	terraform -chdir=terraform-dev apply -auto-approve
 
+# Developer Ingest
+
+local-ingest: local-upload-sample local-ingest-run
+
 local-upload-sample:
-	awslocal s3 cp sample.email s3://actionnetworkactivistsync.bostondsa.net/sample.email
+	awslocal s3 cp samples/sample.eml s3://actionnetworkactivistsync.bostondsa.net/sample.eml
 
 local-ingest-run:
-	pipenv run python-lambda-local -f lambda_handler lambda_ingester.py lambda_ingester_event.json
+	pipenv run python-lambda-local -f lambda_handler lambda_ingester.py samples/lambda_ingester_event.json
 
 # Developer Processor
+
 local-processor:
-	pipenv run python-lambda-local -f lambda_handler lambda_processor.py lambda_processor_event.json
+	pipenv run python-lambda-local -f lambda_handler lambda_processor.py samples/lambda_processor_event.json
+
+# Developer Lapsed Cron
+
+local-lapsed:
+	pipenv run python-lambda-local -f lambda_handler lambda_lapsed.py samples/lambda_lapsed_event.json
 
 # Tests
+
 test:
 	pipenv run green
 

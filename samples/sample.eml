@@ -1,0 +1,40 @@
+MIME-Version: 1.0
+Date: Sat, 6 Mar 2021 13:45:23 -0500
+Message-ID: <CAL2Z2fcXdEf+UNrqeqUDhYp12imR4oBv0+C-vvCy6azYLwSuVw@mail.example.com>
+DsaKey: TESTKEY
+Subject: test
+From: DSA <actionkit@example.com>
+To: Boston DSA <tech@bostondsa.org>
+Content-Type: multipart/mixed; boundary="0000000000007606b005bce29a0f"
+
+--0000000000007606b005bce29a0f
+Content-Type: multipart/alternative; boundary="0000000000007606ad05bce29a0d"
+
+--0000000000007606ad05bce29a0d
+Content-Type: text/plain; charset="UTF-8"
+
+
+
+--0000000000007606ad05bce29a0d
+Content-Type: text/html; charset="UTF-8"
+
+<div dir="ltr"><br></div>
+
+--0000000000007606ad05bce29a0d--
+--0000000000007606b005bce29a0f
+Content-Type: application/x-zip-compressed; name="actionkit_export.zip"
+Content-Disposition: attachment; filename="actionkit_export.zip"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_kly2tylo0
+Content-ID: <f_kly2tylo0>
+
+UEsDBBQAAAAIAGVtZlKKfEHIKQEAADUCAAAUABwAYWN0aW9ua2l0X2V4cG9ydC5jc3ZVVAkAAz7N
+Q2A+zUNgdXgLAAEE6AMAAAToAwAAhVBdS8MwFH0f7D/sB1zEbm7im10rqHMiTPDj5ZK1tzYsyS1J
+Cuu/N23XMkXwPoRzTs49nCTe4EMKhbTOoxGaQMs8V9RjJQbV1UUhj7CWSknzhXGeW3IOn6QhjP6W
+56OcSN+MZOeFp5F9ygq2Qp5vR7+F+Sh0QQPpgwbWBfFehuovJRuCe9YDfGN7OME7HfzdElaWCrJk
+MoKU8Zk9JkIpeGRpMG2j3/P21KT3ZF0pK/RNFTgbX6oG85ocutChdueek1IbyQZ7/US6f+yh4kwo
+cL7OyXhsQpDhkbqsZFa9/SPdxbOkFJUPMQFj1uPpJAoDG2EVhNfYI0C0uJm9WmrrzXYeYM3Os4Ft
+DPPW+s/1KrpeLZZXy8slABx0SLylo9CVoouMNfyY6eQbUEsBAh4DFAAAAAgAZW1mUop8QcgpAQAA
+NQIAABQAGAAAAAAAAQAAAKSBAAAAAGFjdGlvbmtpdF9leHBvcnQuY3N2VVQFAAM+zUNgdXgLAAEE
+6AMAAAToAwAAUEsFBgAAAAABAAEAWgAAAHcBAAAAAA==
+--0000000000007606b005bce29a0f--
