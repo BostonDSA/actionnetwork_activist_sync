@@ -10,10 +10,10 @@
               "ApproximateCreationDateTime": 1479499740,
               "Keys": {
                   "email": {
-                      "S": "parks@boston.gov"
+                      "S": "kmarx@example.com"
                   },
                   "batch": {
-                      "S": "202052"
+                      "S": "202109"
                   }
               },
               "SequenceNumber": "13021600000000001596893679",
