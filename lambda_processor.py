@@ -57,8 +57,8 @@ def lambda_handler(event, context):
             'dry_run': dry_run
         })
 
-    new = 0
-    updated = 0
+    new = {}
+    updated = {}
 
     for record in event['Records']:
         if record['eventName'] != 'INSERT':
@@ -66,6 +66,13 @@ def lambda_handler(event, context):
 
         email = record['dynamodb']['Keys']['email']['S']
         batch = record['dynamodb']['Keys']['batch']['S']
+
+        if not batch in new:
+            new[batch] = 0
+        if not batch in updated:
+            updated[batch] = 0
+
+
         item = State.get(batch, email)
         item.status = State.PROCESSING
         item.save()
@@ -77,8 +84,10 @@ def lambda_handler(event, context):
 
         if len(people) == 0:
             person = field_mapper.get_actionnetwork_person()
+
             logger.info('Creating new member', extra={'email': person['email']})
-            new += 1
+            new[batch] += 1
+
             if not dry_run:
                 actionnetwork.create_person(**person)
         else:
@@ -91,7 +100,8 @@ def lambda_handler(event, context):
                     'person_id': field_mapper.person_id,
                     'email': email
                     })
-                updated += 1
+                updated[batch] += 1
+
                 if not dry_run:
                     actionnetwork.update_person(**updated_person)
 

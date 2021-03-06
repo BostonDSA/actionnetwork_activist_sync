@@ -75,8 +75,8 @@ class TestProcessor(unittest.TestCase):
         lambda_processor.get_actionnetwork = lambda a: mock_an
 
         (new, updated) = lambda_processor.lambda_handler(event, Context(5))
-        self.assertEqual(new, 1)
-        self.assertEqual(updated, 0)
+        self.assertEqual(new[state.batch], 1)
+        self.assertEqual(updated[state.batch], 0)
 
     @mock_dynamodb2
     def test_update_existing_member(self):
@@ -128,5 +128,5 @@ class TestProcessor(unittest.TestCase):
         lambda_processor.get_actionnetwork = lambda a: mock_an
 
         (new, updated) = lambda_processor.lambda_handler(event, Context(5))
-        self.assertEqual(new, 0)
-        self.assertEqual(updated, 1)
+        self.assertEqual(new[state.batch], 0)
+        self.assertEqual(updated[state.batch], 1)
