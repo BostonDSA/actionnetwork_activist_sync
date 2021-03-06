@@ -90,7 +90,7 @@ class TestLapsed(unittest.TestCase):
             lambda_lapsed.lambda_handler({}, Context(5))
 
     @mock_dynamodb2
-    def test_in_cur_but_not_in_prev_is_noop(self):
+    def test_in_cur_but_not_in_prev_errors(self):
         import lambda_lapsed
         from actionnetwork_activist_sync.actionnetwork import ActionNetwork
         from actionnetwork_activist_sync.state_model import State
@@ -117,11 +117,8 @@ class TestLapsed(unittest.TestCase):
         mock_an = Mock(ActionNetwork)
         lambda_lapsed.get_actionnetwork = lambda a: mock_an
 
-        (rem, cur, prev) = lambda_lapsed.lambda_handler({}, Context(5))
-
-        self.assertEqual(rem, 0)
-        self.assertEqual(cur, 1)
-        self.assertEqual(prev, 0)
+        with self.assertRaises(RuntimeError):
+            lambda_lapsed.lambda_handler({}, Context(5))
 
     @mock_dynamodb2
     def test_not_in_cur_but_in_prev_gets_removed(self):
