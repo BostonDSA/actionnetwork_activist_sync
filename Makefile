@@ -26,6 +26,11 @@ local-processor:
 local-lapsed:
 	pipenv run python-lambda-local -f lambda_handler lambda_lapsed.py samples/lambda_lapsed_event.json
 
+# Developer Neighborhood Cron
+
+local-hood:
+	pipenv run python-lambda-local -t 60 -f lambda_handler lambda_neighborhoods.py samples/lambda_neighborhoods_event.json
+
 # Tests
 
 test:

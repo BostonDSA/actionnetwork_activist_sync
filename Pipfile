@@ -12,6 +12,7 @@ localstack-client = "*"
 pylint = "*"
 python-lambda-local = "*"
 green = "*"
+ipython = "*"
 
 [packages]
 agate = "*"
