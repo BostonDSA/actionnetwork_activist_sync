@@ -25,9 +25,9 @@ if api_key.startswith('arn'):
     secret = secrets_client.get_secret_value(SecretId=api_key)
     secret_dict = json.loads(secret['SecretString'])
     api_key = secret_dict['ACTIONNETWORK_API_KEY']
-    logger.debug('Using API key from Secrets Manager')
+    logger.debug('Using API key from Secrets Manager.')
 else:
-    logger.debug('Using API key from Env')
+    logger.debug('Using API key from Env.')
 
 hood_map = os.environ['NEIGHBORHOOD_MAP']
 if hood_map.startswith('arn'):
@@ -37,7 +37,7 @@ if hood_map.startswith('arn'):
     # logger.debug('Using API key from Secrets Manager')
 else:
     hood_map = json.loads(hood_map)
-    logger.debug('Using API key from Env')
+    logger.debug('Using Neighborhood API key from Env.')
 
 def lambda_handler(event, context):
     """
@@ -48,11 +48,11 @@ def lambda_handler(event, context):
     reports = action_network.get_neighborhood_reports()
 
     logger.info(
-    'Found neighborhood reports',
+    'Found neighborhood reports.',
     extra={
-        'count': len(reports)
+        'count': len(reports),
+        'dry_run': dry_run
     })
-
 
     total_existing = 0
     total_new = 0
@@ -66,7 +66,7 @@ def lambda_handler(event, context):
 
         if not report['name'] in hood_map:
             logger.warning(
-                'Missing API key for neighborhood',
+                'Missing API key for neighborhood.',
                 extra={
                     'report_name': report['name']
             })
@@ -81,11 +81,20 @@ def lambda_handler(event, context):
         new = 0
 
         for person in people:
-            if hood_an.get_person(person['action_network:person_id']):
+            if hood_an.get_person(person_id=person['action_network:person_id']):
                 existing += 1
             else:
+                oPerson = action_network.get_person(person_id=person['action_network:person_id'])
+                if not dry_run:
+                    hood_an.subscribe_person(oPerson)
                 new += 1
-                # add subscription
+                logger.info(
+                    'New person subscribed to neighborhood.',
+                        extra={
+                            'emails': oPerson.email_addresses,
+                            'report': report['name']
+                        })
+
 
         logger.info(
         'Completed neighborhood.',

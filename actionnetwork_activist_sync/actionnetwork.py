@@ -93,7 +93,10 @@ class ActionNetwork(ActionNetworkApi):
 
         """
 
-
+        url = "{0}people/".format(self.base_url)
+        payload = {'person': {'email_addresses': person.email_addresses}}
+        resp = requests.post(url, json=payload, headers=self.headers)
+        return resp
 
     def get_neighborhood_reports(self):
         page = 1
