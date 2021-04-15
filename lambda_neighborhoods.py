@@ -113,6 +113,8 @@ def lambda_handler(event, context):
             'total_new': total_new
         })
 
+    return (total_existing, total_new)
+
 def get_actionnetwork(api_k):
     """Creates an ActionNetwork object.
 
