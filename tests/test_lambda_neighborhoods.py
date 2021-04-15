@@ -1,20 +1,17 @@
-import json
 import importlib
 import os
 import unittest
 from unittest.mock import Mock
 
-from moto import mock_dynamodb2
-import boto3
 from lambda_local.context import Context
-
-os.environ['ENVIRONMENT'] = 'TEST'
-os.environ['LOG_LEVEL'] = 'CRITICAL'
-os.environ['DRY_RUN'] = '0'
 
 from actionnetwork_activist_sync.actionnetwork import ActionNetwork
 from actionnetwork_activist_sync.osdi import Person
 import lambda_neighborhoods
+
+os.environ['ENVIRONMENT'] = 'TEST'
+os.environ['LOG_LEVEL'] = 'CRITICAL'
+os.environ['DRY_RUN'] = '0'
 
 class TestNeighborhoods(unittest.TestCase):
 
@@ -98,4 +95,3 @@ class TestNeighborhoods(unittest.TestCase):
         mock_an.get_person.assert_called_once_with(person_id=1)
         mock_hood_an.subscribe_person.assert_called_once_with(person)
         self.assertEqual((0,1), ret)
-

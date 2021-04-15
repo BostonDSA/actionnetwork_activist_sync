@@ -4,16 +4,13 @@ which records are missing from the new one. These indicate that
 a membership has lapsed.
 """
 
-import datetime
 import json
 import os
-from pprint import pprint as pp
 
 import boto3
 
 from actionnetwork_activist_sync.actionnetwork import ActionNetwork
 from actionnetwork_activist_sync.logging import get_logger
-from actionnetwork_activist_sync.state_model import State
 
 logger = get_logger('lambda_neighborhoods')
 
@@ -84,14 +81,14 @@ def lambda_handler(event, context):
             if hood_an.get_person(person_id=person['action_network:person_id']):
                 existing += 1
             else:
-                oPerson = action_network.get_person(person_id=person['action_network:person_id'])
+                o_person = action_network.get_person(person_id=person['action_network:person_id'])
                 if not dry_run:
-                    hood_an.subscribe_person(oPerson)
+                    hood_an.subscribe_person(o_person)
                 new += 1
                 logger.info(
                     'New person subscribed to neighborhood.',
                         extra={
-                            'emails': oPerson.email_addresses,
+                            'emails': o_person.email_addresses,
                             'report': report['name']
                         })
 

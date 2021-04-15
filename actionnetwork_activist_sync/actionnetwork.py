@@ -65,7 +65,7 @@ class ActionNetwork(ActionNetworkApi):
 
         return [Person(**p) for p in response['_embedded']['osdi:people']]
 
-    def get_person_by_id(self, id):
+    def get_person_by_id(self, person_id):
         """Get a person by the ActionNetwork ID
 
         Args:
@@ -77,7 +77,7 @@ class ActionNetwork(ActionNetworkApi):
 
         for _ in range(0, 3):
             try:
-                response = self.get_person(person_id=id)
+                response = self.get_person(person_id=person_id)
             except requests.exceptions.ConnectionError:
                 time.sleep(5)
             if response:
@@ -89,8 +89,17 @@ class ActionNetwork(ActionNetworkApi):
         return Person(**response)
 
     def subscribe_person(self, person):
-        """
+        """Subscribe a person to ActionNetwork.
 
+        The email_addresses property determines what is getting subscribed
+        an the status. See https://actionnetwork.org/docs/v2/people for the format
+        of this field.
+
+        Args:
+          person (Person): An OSDI Person
+
+        Returns:
+          HTTP Response
         """
 
         url = "{0}people/".format(self.base_url)
@@ -99,6 +108,15 @@ class ActionNetwork(ActionNetworkApi):
         return resp
 
     def get_neighborhood_reports(self):
+        """Returns all reports based on the naming convetion defined
+        in is_neighborhood_report.
+
+        Reference: https://actionnetwork.org/docs/v2/lists
+
+        Returns:
+          list of reports.
+        """
+
         page = 1
         reports = []
 
@@ -112,8 +130,15 @@ class ActionNetwork(ActionNetworkApi):
         return list(filter(self.is_neighborhood_report, reports))
 
     def get_reports(self, page=1):
-        """
+        """Used for the Lists endpoing.
 
+        See: https://actionnetwork.org/docs/v2/lists
+
+        Args:
+          page (int): For pagination
+
+        Returns:
+          list of OSDI List
         """
 
         base = self.resource_to_url('lists')
@@ -122,17 +147,30 @@ class ActionNetwork(ActionNetworkApi):
         return resp['_embedded']['osdi:lists']
 
     def is_neighborhood_report(self, report):
+        """Filter for getting reports based on a naming convention.
+
+        Args:
+          report (dict): Report to check
+
+        Returns:
+          bool
         """
 
-        """
-
-        return 'name' in report \
+        return 'name' in report and 'description' in report \
         and report['name'].startswith('Neighborhood -') \
         and report['description'] == 'Report'
 
     def get_people_from_report(self, report, page=1):
-        """
+        """Fetchs OSDI Items (people) from an OSDI List (report).
 
+        See: https://actionnetwork.org/docs/v2/items
+
+        Args:
+          report (dict): Report from lists endpoint
+          page (int): For pagination
+
+        Returns:
+          list of OSDI items
         """
 
         list_url = report['_links']['self']['href']
@@ -141,8 +179,13 @@ class ActionNetwork(ActionNetworkApi):
         return resp['_embedded']['osdi:items']
 
     def get_all_people_from_report(self, report):
-        """
+        """Handles pagination for fetching all people from a report.
 
+        Args:
+          report (dict): Report from lists endpoint
+
+        Returns:
+          list of People
         """
 
         page = 1
