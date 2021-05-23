@@ -26,6 +26,7 @@ logger = get_logger('lambda_ingester')
 dynamodb_client = boto3.client('dynamodb')
 s3_client = boto3.client('s3')
 secrets_client = boto3.client('secretsmanager')
+sns_client = boto3.client('sns')
 
 if os.environ.get('ENVIRONMENT') == 'local':
     import localstack_client.session
@@ -109,4 +110,40 @@ def lambda_handler(event, context):
 
                 count += 1
 
+            topic = os.environ.get('SLACK_TOPIC_ARN')
+            chan = os.environ.get('SLACK_CHANNEL')
+            if not os.environ.get('ENVIRONMENT') == 'local' and topic and chan:
+                sns_client.publish(
+                    TopicArn=topic,
+                    Message=json.dumps({
+                        'channel': chan,
+                        'text': 'New member data has arrived from national',
+                        'attachments': [
+                            {
+                                'color': 'b71c1c',
+                                'fallback': 'New member data has arrived from national',
+                                'fields': [
+                                    {
+                                        'title': 'Number of rows',
+                                        'value': count,
+                                        'short': True
+                                    }
+                                ],
+                                'footer': '<https://github.com/BostonDSA/actionnetwork_activist_sync|BostonDSA/actionnetwork_activist_sync>',
+                                'footer_icon': 'https://github.com/favicon.ico',
+
+                            }
+                        ]
+                    }),
+                    MessageAttributes={
+                        'id': {
+                            'DataType': 'String',
+                            'StringValue': 'postMessage'
+                        },
+                        'type': {
+                            'DataType': 'String',
+                            'StringValue': 'chat'
+                        }
+                    }
+                )
             logger.info('Finished processing CSV.', extra={'num_rows': count})
