@@ -36,57 +36,41 @@ if os.environ.get('ENVIRONMENT') == 'local':
 
 def lambda_handler(event, context):
     """
-    This handler is meanted to be trigged by changes on a DynamoDB table
-    that has ActionKit CSV rows stored as items. It handles creating new and
-    updating existing users.
+    This handler gets triggered by the step function after the ingester has converted
+    CSV rows into DynamoDB items. It handles creating new and updating existing users.
     """
 
     actionnetwork = get_actionnetwork(api_key)
 
-    eventNames = {
-        'INSERT': 0,
-        'MODIFY': 0,
-        'REMOVE': 0
-    }
-    for record in event['Records']:
-        eventNames[record['eventName']] += 1
-
     logger.info(
         'Starting to process DynamoDB items', extra={
-            'num_records': eventNames,
             'dry_run': dry_run
         })
 
-    new = {}
-    updated = {}
+    new = event['new_members'] if 'new_members' in event else 0
+    updated = event['updated_members'] if 'updated_members' in event else 0
 
-    for record in event['Records']:
-        if record['eventName'] != 'INSERT':
-            continue
+    unprocessed = State.query(
+        hash_key=event['batch'],
+        filter_condition=State.status == State.UNPROCESSED,
+        limit=10
+        )
 
-        email = record['dynamodb']['Keys']['email']['S']
-        batch = record['dynamodb']['Keys']['batch']['S']
+    for item in unprocessed:
 
-        if not batch in new:
-            new[batch] = 0
-        if not batch in updated:
-            updated[batch] = 0
-
-
-        item = State.get(batch, email)
         item.status = State.PROCESSING
         item.save()
 
         from_csv = json.loads(item.raw)
         row = Row(from_csv.values(), from_csv.keys())
         field_mapper = FieldMapper(row)
-        people = actionnetwork.get_people_by_email(email)
+        people = actionnetwork.get_people_by_email(item.email)
 
         if len(people) == 0:
             person = field_mapper.get_actionnetwork_person()
 
             logger.info('Creating new member', extra={'email': person['email']})
-            new[batch] += 1
+            new += 1
 
             if not dry_run:
                 actionnetwork.create_person(**person)
@@ -98,9 +82,9 @@ def lambda_handler(event, context):
 
                 logger.info('Updating member', extra={
                     'person_id': field_mapper.person_id,
-                    'email': email
+                    'email': item.email
                     })
-                updated[batch] += 1
+                updated += 1
 
                 if not dry_run:
                     actionnetwork.update_person(**updated_person)
@@ -112,7 +96,13 @@ def lambda_handler(event, context):
         'new': new,
         'update': updated
     })
-    return (new, updated)
+
+    result = {
+        'new_members': new,
+        'updated_members': updated,
+    }
+    result.update(event)
+    return result
 
 def get_actionnetwork(api_k):
     """Creates an ActionNetwork object.
