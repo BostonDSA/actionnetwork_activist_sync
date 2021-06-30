@@ -53,30 +53,17 @@ class TestProcessor(unittest.TestCase):
         state.save()
 
         event = {
-            'Records': [
-                {
-                    'eventName': 'INSERT',
-                    'dynamodb': {
-                        'Keys': {
-                            'email': {
-                                'S': state.email
-                            },
-                            'batch': {
-                                'S': state.batch
-                            }
-                        }
-                    }
-                }
-            ]
+            'batch': '202101',
+            'ingested_rows': 1
         }
 
         mock_an = Mock(ActionNetwork)
         mock_an.get_people_by_email = Mock(return_value=[])
         lambda_processor.get_actionnetwork = lambda a: mock_an
 
-        (new, updated) = lambda_processor.lambda_handler(event, Context(5))
-        self.assertEqual(new[state.batch], 1)
-        self.assertEqual(updated[state.batch], 0)
+        result = lambda_processor.lambda_handler(event, Context(5))
+        self.assertEqual(result['new_members'], 1)
+        self.assertEqual(result['updated_members'], 0)
 
     @mock_dynamodb2
     def test_update_existing_member(self):
@@ -101,21 +88,8 @@ class TestProcessor(unittest.TestCase):
         state.save()
 
         event = {
-            'Records': [
-                {
-                    'eventName': 'INSERT',
-                    'dynamodb': {
-                        'Keys': {
-                            'email': {
-                                'S': state.email
-                            },
-                            'batch': {
-                                'S': state.batch
-                            }
-                        }
-                    }
-                }
-            ]
+            'batch': '202101',
+            'ingested_rows': 1
         }
 
         karl =  Person(
@@ -127,6 +101,6 @@ class TestProcessor(unittest.TestCase):
         mock_an.get_people_by_email = Mock(return_value=[karl])
         lambda_processor.get_actionnetwork = lambda a: mock_an
 
-        (new, updated) = lambda_processor.lambda_handler(event, Context(5))
-        self.assertEqual(new[state.batch], 0)
-        self.assertEqual(updated[state.batch], 1)
+        result = lambda_processor.lambda_handler(event, Context(5))
+        self.assertEqual(result['new_members'], 0)
+        self.assertEqual(result['updated_members'], 1)
