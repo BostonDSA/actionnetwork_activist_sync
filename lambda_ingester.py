@@ -52,6 +52,7 @@ def lambda_handler(event, context):
     will be ingested into DynamoDB.
     """
 
+    count = 0
     for record in event['Records']:
 
         # Fetch email from bucket
@@ -92,7 +93,7 @@ def lambda_handler(event, context):
 
                 csv_lines = io.StringIO(zip.read(names[0]).decode('utf-8'))
 
-            count = 0
+
             for row in csv.DictReader(csv_lines):
                 d_row = dict(row)
 
@@ -110,9 +111,11 @@ def lambda_handler(event, context):
 
                 count += 1
 
+            # TODO: move to later in the step function
+
             topic = os.environ.get('SLACK_TOPIC_ARN')
             chan = os.environ.get('SLACK_CHANNEL')
-            if not os.environ.get('ENVIRONMENT') == 'local' and topic and chan:
+            if False and not os.environ.get('ENVIRONMENT') == 'local' and topic and chan:
                 sns_client.publish(
                     TopicArn=topic,
                     Message=json.dumps({
@@ -147,3 +150,8 @@ def lambda_handler(event, context):
                     }
                 )
             logger.info('Finished processing CSV.', extra={'num_rows': count})
+
+    return {
+        'batch': batch,
+        'ingested_rows': count
+    }
