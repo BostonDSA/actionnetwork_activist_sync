@@ -18,8 +18,15 @@ from actionnetwork_activist_sync.state_model import State
 logger = get_logger('lambda_processor')
 
 dry_run = os.environ.get('DRY_RUN') != '0'
-dynamodb_client = boto3.client('dynamodb')
-secrets_client = boto3.client('secretsmanager')
+
+if os.environ.get('ENVIRONMENT') == 'local':
+    import localstack_client.session
+    session = localstack_client.session.Session()
+else:
+    session = boto3.session.Session()
+
+dynamodb_client = session.client('dynamodb')
+secrets_client = session.client('secretsmanager')
 
 api_key = os.environ['ACTIONNETWORK_API_KEY']
 if api_key.startswith('arn'):
@@ -29,10 +36,6 @@ if api_key.startswith('arn'):
     logger.debug('Using API key from Secrets Manager')
 else:
     logger.debug('Using API key from Env')
-
-if os.environ.get('ENVIRONMENT') == 'local':
-    import localstack_client.session
-    dynamodb_client = localstack_client.session.Session().client('dynamodb')
 
 def lambda_handler(event, context):
     """

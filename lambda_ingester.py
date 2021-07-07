@@ -23,15 +23,16 @@ from actionnetwork_activist_sync.state_model import State
 
 logger = get_logger('lambda_ingester')
 
-dynamodb_client = boto3.client('dynamodb')
-s3_client = boto3.client('s3')
-secrets_client = boto3.client('secretsmanager')
-sns_client = boto3.client('sns')
-
 if os.environ.get('ENVIRONMENT') == 'local':
     import localstack_client.session
-    dynamodb_client = localstack_client.session.Session().client('dynamodb')
-    s3_client = localstack_client.session.Session().client('s3')
+    session = localstack_client.session.Session()
+else:
+    session = boto3.session.Session()
+
+dynamodb_client = session.client('dynamodb')
+s3_client = session.client('s3')
+secrets_client = session.client('secretsmanager')
+sns_client = session.client('sns')
 
 dsa_key = os.environ['DSA_KEY']
 if dsa_key.startswith('arn'):

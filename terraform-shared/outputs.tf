@@ -21,3 +21,23 @@ output "dry-run-lapsed" {
 output "db-table" {
   value = aws_dynamodb_table.an-sync
 }
+
+output "lambda-ingester" {
+  value = aws_lambda_function.an-sync-ingester-lambda
+}
+
+output "lambda-processor" {
+  value = aws_lambda_function.an-sync-processor-lambda
+}
+
+output "lambda-lapsed" {
+  value = aws_lambda_function.an-sync-lapsed-lambda
+}
+
+output "iam-role-lambda" {
+  value = aws_iam_role.an-sync-lambda-role
+}
+
+output "secrets" {
+  value = aws_secretsmanager_secret.an-sync-secrets
+}

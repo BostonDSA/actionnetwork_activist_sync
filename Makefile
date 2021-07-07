@@ -1,10 +1,12 @@
 # Developer
 
-local-init:
+shell:
 	-pipenv shell
+
+local-init:
 	docker-compose up -d
 	terraform -chdir=terraform-dev init
-	terraform -chdir=terraform-dev apply -auto-approve
+	terraform -chdir=terraform-dev apply -auto-approve -var='secrets={"DSA_KEY":"${DSA_KEY}","ACTIONNETWORK_API_KEY":"${ACTIONNETWORK_API_KEY}"}'
 
 # Developer Ingest
 

@@ -3,9 +3,12 @@ version: '2.1'
 services:
   localstack:
     container_name: "localstack_main"
-    image: localstack/localstack:0.12.6
+    image: localstack/localstack
     ports:
       - "4566-4599:4566-4599"
+    env_file:
+      - .env
     environment:
-      - SERVICES=s3,dynamodb
+      - SERVICES=s3,dynamodb,secretsmanager,iam,lambda,stepfunctions
+      - LAMBDA_EXECUTOR=local
       - DEBUG=1
