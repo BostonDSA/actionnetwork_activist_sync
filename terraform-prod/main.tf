@@ -97,7 +97,6 @@ resource "aws_s3_bucket_notification" "an-sync-bucket-notification" {
 
 # Lambda to process ingester messages
 
-
 data "aws_iam_policy_document" "an-sync-lambda-policy-attach" {
   statement {
     actions = [
@@ -144,38 +143,15 @@ resource "aws_lambda_permission" "an-sync-ingester-lambda-permission" {
   source_arn    = aws_s3_bucket.an-sync-bucket.arn
 }
 
-
 resource "aws_cloudwatch_log_group" "an-sync-ingester-lambda" {
   name              = "/aws/lambda/${module.shared.lambda-ingester.function_name}"
   retention_in_days = 60
 }
 
-# Lambda to process the DynamoDB items
-
-
-
 resource "aws_cloudwatch_log_group" "an-sync-processor-lambda" {
   name              = "/aws/lambda/${module.shared.lambda-processor.function_name}"
   retention_in_days = 60
 }
-
-# Lambda to process membership lapses
-
-
-
-resource "aws_cloudwatch_event_rule" "an-sync-lapsed" {
-  name        = "an-sync-lapsed"
-  description = "Weekly job to trigger lapsed lambda"
-  # Tuesday 7pm
-  schedule_expression = "cron(0 19 ? * 3 *)"
-}
-
-resource "aws_cloudwatch_event_target" "an-sync-lapsed" {
-  rule      = aws_cloudwatch_event_rule.an-sync-lapsed.name
-  target_id = "an-sync-trigger-lambda"
-  arn       = module.shared.lambda-lapsed.arn
-}
-
 resource "aws_cloudwatch_log_group" "an-sync-lapsed-lambda" {
   name              = "/aws/lambda/${module.shared.lambda-lapsed.function_name}"
   retention_in_days = 60
