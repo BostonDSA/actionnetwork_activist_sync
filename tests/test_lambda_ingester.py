@@ -126,18 +126,12 @@ class TestIngester(unittest.TestCase):
 
     def get_event(self, bucket):
         return {
-            'Records': [
-                {
-                    's3': {
-                        'bucket': {
-                            'name': bucket
-                        },
-                        'object': {
-                            'key': 'test.email'
-                        }
-                    }
+            'detail': {
+                'requestParameters': {
+                    'bucketName': bucket,
+                    'key': 'test.email'
                 }
-            ]
+            }
         }
 
     def get_zipped_csv(self, csv_data):
