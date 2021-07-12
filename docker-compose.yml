@@ -9,6 +9,6 @@ services:
     env_file:
       - .env
     environment:
-      - SERVICES=s3,dynamodb,secretsmanager,iam,lambda,stepfunctions
+      - SERVICES=dynamodb,eventbridge,iam,lambda,s3,secretsmanager,stepfunctions
       - LAMBDA_EXECUTOR=local
       - DEBUG=1
