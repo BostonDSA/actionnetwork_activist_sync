@@ -145,13 +145,13 @@ resource "aws_sfn_state_machine" "an-sync-state-machine" {
   "States": {
     "Ingester": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:us-east-1:173940671194:function:test-step-func",
+      "Resource": "${aws_lambda_function.an-sync-ingester-lambda.arn}",
       "Next": "Processor"
     },
 
     "Processor": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:us-east-1:173940671194:function:test-step-function-2",
+      "Resource": "${aws_lambda_function.an-sync-processor-lambda.arn}",
       "Next": "MoreToProcess"
     },
 
@@ -175,7 +175,7 @@ resource "aws_sfn_state_machine" "an-sync-state-machine" {
 
     "Lapsed": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:us-east-1:173940671194:function:test-step-functions-3",
+      "Resource": "${aws_lambda_function.an-sync-lapsed-lambda.arn}",
       "Next": "Succeed"
     },
 
