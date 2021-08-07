@@ -6,9 +6,11 @@ services:
     image: localstack/localstack
     ports:
       - "4566-4599:4566-4599"
+      - 5678:5678
     env_file:
       - .env
     environment:
       - SERVICES=dynamodb,eventbridge,iam,lambda,s3,secretsmanager,stepfunctions
       - LAMBDA_EXECUTOR=local
       - DEBUG=1
+      - DEVELOP=1
