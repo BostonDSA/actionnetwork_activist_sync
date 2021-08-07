@@ -4,6 +4,7 @@ cares about new items. Those items have the raw data that represents
 a single rows of an ActionKit export CSV. These rows get synced
 into ActionNetwork via API.
 """
+
 import json
 import os
 
@@ -55,7 +56,7 @@ def lambda_handler(event, context):
 
     unprocessed = State.query(
         hash_key=event['batch'],
-        filter_condition=State.status == State.UNPROCESSED,
+        filter_condition=(State.status == State.UNPROCESSED),
         limit=10
         )
 
@@ -103,6 +104,7 @@ def lambda_handler(event, context):
     result = {
         'new_members': new,
         'updated_members': updated,
+        'remaining': 0
     }
     result.update(event)
     return result
