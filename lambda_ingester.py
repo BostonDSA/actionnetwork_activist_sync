@@ -56,8 +56,8 @@ def lambda_handler(event, context):
     count = 0
 
     # Fetch email from bucket
-    bucket = event['detail']['requestParameters']['bucketName']
-    key = unquote_plus(event['detail']['requestParameters']['key'])
+    bucket = event['bucketName']
+    key = unquote_plus(event['key'])
     tmpkey = key.replace('/', '')
     download_path = f'/tmp/{uuid.uuid4()}{tmpkey}'
     logger.info(
