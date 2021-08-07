@@ -8,6 +8,11 @@ local-init:
 	terraform -chdir=terraform-dev init
 	terraform -chdir=terraform-dev apply -auto-approve -var='secrets={"DSA_KEY":"${DSA_KEY}","ACTIONNETWORK_API_KEY":"${ACTIONNETWORK_API_KEY}"}'
 
+# Developer Step Function
+
+local-exec-stepfn: local-upload-sample
+	awslocal stepfunctions start-execution --state-machine-arn arn:aws:states:us-east-1:000000000000:stateMachine:actionnetwork_activist_sync --input '{"bucketName": "actionnetworkactivistsync.bostondsa.net", "key": "sample.eml"}'
+
 # Developer Ingest
 
 local-ingest: local-upload-sample local-ingest-run
