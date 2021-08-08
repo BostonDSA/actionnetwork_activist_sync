@@ -126,12 +126,8 @@ class TestIngester(unittest.TestCase):
 
     def get_event(self, bucket):
         return {
-            'detail': {
-                'requestParameters': {
-                    'bucketName': bucket,
-                    'key': 'test.email'
-                }
-            }
+            'bucketName': bucket,
+            'key': 'test.email'
         }
 
     def get_zipped_csv(self, csv_data):
