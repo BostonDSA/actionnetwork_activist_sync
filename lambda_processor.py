@@ -113,8 +113,9 @@ def lambda_handler(event, context):
         'updated_members': updated,
         'hasMore': (remainder != 0)
     }
-    result.update(event)
-    return result
+
+    event.update(result)
+    return event
 
 def get_actionnetwork(api_k):
     """Creates an ActionNetwork object.
