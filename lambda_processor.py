@@ -38,6 +38,8 @@ if api_key.startswith('arn'):
 else:
     logger.debug('Using API key from Env')
 
+batch_size = 10
+
 def lambda_handler(event, context):
     """
     This handler gets triggered by the step function after the ingester has converted
@@ -56,8 +58,8 @@ def lambda_handler(event, context):
 
     unprocessed = State.query(
         hash_key=event['batch'],
-        filter_condition=(State.status == State.UNPROCESSED),
-        limit=10
+        filter_condition=State.status == State.UNPROCESSED,
+        limit=batch_size
         )
 
     for item in unprocessed:
@@ -101,10 +103,15 @@ def lambda_handler(event, context):
         'update': updated
     })
 
+    remainder = State.count(
+        hash_key=event['batch'],
+        filter_condition=State.status == State.UNPROCESSED
+        )
+
     result = {
         'new_members': new,
         'updated_members': updated,
-        'remaining': 0
+        'hasMore': (remainder != 0)
     }
     result.update(event)
     return result

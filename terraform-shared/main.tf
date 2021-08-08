@@ -159,18 +159,12 @@ resource "aws_sfn_state_machine" "an-sync-state-machine" {
       "Type": "Choice",
       "Choices": [
         {
-          "Not": {
-            "Variable": "$.remaining",
-            "NumericEquals": 0
-          },
+          "Variable": "$.hasMore",
+          "BooleanEquals": true,
           "Next": "Processor"
-        },
-        {
-          "Variable": "$.remaining",
-          "NumericEquals": 0,
-          "Next": "Lapsed"
         }
-        ]
+       ],
+      "Default": "Lapsed"
     },
 
     "Lapsed": {

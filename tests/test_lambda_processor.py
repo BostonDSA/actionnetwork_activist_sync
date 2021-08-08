@@ -64,6 +64,7 @@ class TestProcessor(unittest.TestCase):
         result = lambda_processor.lambda_handler(event, Context(5))
         self.assertEqual(result['new_members'], 1)
         self.assertEqual(result['updated_members'], 0)
+        self.assertFalse(result['hasMore'])
 
     @mock_dynamodb2
     def test_update_existing_member(self):
@@ -104,3 +105,57 @@ class TestProcessor(unittest.TestCase):
         result = lambda_processor.lambda_handler(event, Context(5))
         self.assertEqual(result['new_members'], 0)
         self.assertEqual(result['updated_members'], 1)
+        self.assertFalse(result['hasMore'])
+
+    @mock_dynamodb2
+    def test_has_more(self):
+        import lambda_processor
+        from actionnetwork_activist_sync.actionnetwork import ActionNetwork
+        from actionnetwork_activist_sync.state_model import State
+
+        # needed to for different env var
+        importlib.reload(lambda_processor)
+
+        lambda_processor.batch_size = 1
+
+        State.create_table(billing_mode='PAY_PER_REQUEST')
+        state = State(
+            '202101',
+            'kmarx@marxists.org',
+            raw=json.dumps({
+                'Email': 'kmarx@marxists.org',
+                'firstname': 'Karl',
+                'lastname': 'Marx'
+            }),
+            status=State.UNPROCESSED
+        )
+        state.save()
+
+        state = State(
+            '202101',
+            'fengels@marxists.org',
+            raw=json.dumps({
+                'Email': 'fengles@marxists.org',
+                'firstname': 'Friedrich',
+                'lastname': 'Engels'
+            }),
+            status=State.UNPROCESSED
+        )
+        state.save()
+
+        event = {
+            'batch': '202101',
+            'ingested_rows': 2
+        }
+
+        karl =  Person(
+            given_name='Karl',
+            family_name='Marx',
+            email_addresses = ['kmarx@marxists.org'])
+
+        mock_an = Mock(ActionNetwork)
+        mock_an.get_people_by_email = Mock(return_value=[karl])
+        lambda_processor.get_actionnetwork = lambda a: mock_an
+
+        result = lambda_processor.lambda_handler(event, Context(5))
+        self.assertTrue(result['hasMore'])
