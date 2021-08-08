@@ -65,13 +65,10 @@ def lambda_handler(event, context):
     if cur_count == 0 or len(cur_emails) == 0:
         errMsg = 'No current batch, something is probably wrong. Aborting.'
         logger.error(errMsg)
-        raise RuntimeError(errMsg)
 
     if prev_count == 0 or len(prev_emails) == 0:
         errMsg = 'No previous batch. If this is not the first week, then something is probably wrong. Aborting.'
         logger.error(errMsg)
-        raise RuntimeError(errMsg)
-
 
     logger.info(
         'Checking previous email list against current',
@@ -83,15 +80,16 @@ def lambda_handler(event, context):
 
     action_network = get_actionnetwork(api_key)
 
-    for prev_email in prev_emails:
-        if prev_email not in cur_emails:
-            logger.info(
-                'Turing is_member off for lapsed member',
-                extra={'email': prev_email}
-            )
-            if not dry_run:
-                action_network.remove_member_by_email(prev_email)
-            removed += 1
+    if prev_emails and cur_emails:
+        for prev_email in prev_emails:
+            if prev_email not in cur_emails:
+                logger.info(
+                    'Turing is_member off for lapsed member',
+                    extra={'email': prev_email}
+                )
+                if not dry_run:
+                    action_network.remove_member_by_email(prev_email)
+                removed += 1
 
     result = {
             'removed': removed,

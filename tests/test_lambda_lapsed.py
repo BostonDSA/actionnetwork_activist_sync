@@ -41,42 +41,6 @@ class TestLapsed(unittest.TestCase):
         self.assertEqual(result['prev_count'], 1)
 
     @mock_dynamodb2
-    def test_in_both_but_unprocessed_errors(self):
-        import lambda_lapsed
-        from actionnetwork_activist_sync.actionnetwork import ActionNetwork
-        from actionnetwork_activist_sync.state_model import State
-
-        State.create_table(billing_mode='PAY_PER_REQUEST')
-
-        self.create_karl_state(State, lambda_lapsed.cur_batch, State.UNPROCESSED)
-        self.create_karl_state(State, lambda_lapsed.prev_batch, State.PROCESSED)
-
-        mock_an = Mock(ActionNetwork)
-        lambda_lapsed.get_actionnetwork = lambda a: mock_an
-
-        with self.assertRaises(RuntimeError):
-            lambda_lapsed.lambda_handler({}, Context(5))
-
-    @mock_dynamodb2
-    def test_in_cur_but_not_in_prev_errors(self):
-        import lambda_lapsed
-        from actionnetwork_activist_sync.actionnetwork import ActionNetwork
-        from actionnetwork_activist_sync.state_model import State
-
-        importlib.reload(lambda_lapsed)
-        lambda_lapsed.get_actionnetwork = lambda a: None
-
-        State.create_table(billing_mode='PAY_PER_REQUEST')
-
-        self.create_karl_state(State, lambda_lapsed.cur_batch, State.PROCESSED)
-
-        mock_an = Mock(ActionNetwork)
-        lambda_lapsed.get_actionnetwork = lambda a: mock_an
-
-        with self.assertRaises(RuntimeError):
-            lambda_lapsed.lambda_handler({}, Context(5))
-
-    @mock_dynamodb2
     def test_not_in_cur_but_in_prev_gets_removed(self):
         import lambda_lapsed
         from actionnetwork_activist_sync.actionnetwork import ActionNetwork
@@ -105,22 +69,6 @@ class TestLapsed(unittest.TestCase):
         self.assertEqual(result['prev_count'], 1)
 
         del os.environ['DRY_RUN']
-
-    @mock_dynamodb2
-    def test_empty_cur_errors(self):
-        import lambda_lapsed
-        from actionnetwork_activist_sync.actionnetwork import ActionNetwork
-        from actionnetwork_activist_sync.state_model import State
-
-        importlib.reload(lambda_lapsed)
-
-        State.create_table(billing_mode='PAY_PER_REQUEST')
-
-        mock_an = Mock(ActionNetwork)
-        lambda_lapsed.get_actionnetwork = lambda a: mock_an
-
-        with self.assertRaises(RuntimeError):
-            lambda_lapsed.lambda_handler({}, Context(5))
 
     def create_karl_state(self, State, batch, status):
         state = State(
