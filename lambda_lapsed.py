@@ -93,14 +93,17 @@ def lambda_handler(event, context):
                 action_network.remove_member_by_email(prev_email)
             removed += 1
 
-    logger.info(
-        'Finished removing lapsed members.',
-        extra={
+    result = {
             'removed': removed,
             'cur_count': cur_count,
             'prev_count': prev_count
-        })
-    return (removed, cur_count, prev_count)
+    }
+    logger.info(
+        'Finished removing lapsed members.',
+        extra=result)
+
+    event.update(result)
+    return event
 
 def get_actionnetwork(api_k):
     """Creates an ActionNetwork object.

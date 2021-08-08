@@ -147,7 +147,6 @@ class TestProcessor(unittest.TestCase):
         self.assertEqual(result2['updated_members'], 2)
         self.assertFalse(result2['hasMore'])
 
-
     def create_karl_state(self, State):
         state = State(
             '202101',
