@@ -32,7 +32,6 @@ else:
 dynamodb_client = session.client('dynamodb')
 s3_client = session.client('s3')
 secrets_client = session.client('secretsmanager')
-sns_client = session.client('sns')
 
 dsa_key = os.environ['DSA_KEY']
 if dsa_key.startswith('arn'):

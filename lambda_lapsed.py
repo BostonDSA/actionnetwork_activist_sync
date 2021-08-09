@@ -163,7 +163,7 @@ def lambda_handler(event, context):
         ]
     })
 
-    if False and not os.environ.get('ENVIRONMENT') == 'local' and topic and chan:
+    if os.environ.get('SLACK_ENABLED') == '1' and topic and chan:
         sns_client.publish(
             TopicArn=topic,
             Message=json.dumps({
