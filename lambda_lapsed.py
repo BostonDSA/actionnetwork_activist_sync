@@ -26,6 +26,7 @@ else:
 
 dynamodb_client = session.client('dynamodb')
 secrets_client = session.client('secretsmanager')
+sns_client = session.client('sns')
 
 api_key = os.environ['ACTIONNETWORK_API_KEY']
 if api_key.startswith('arn'):
@@ -61,6 +62,8 @@ def lambda_handler(event, context):
 
     cur_emails = [c.email for c in cur_items]
     prev_emails = [p.email for p in prev_items]
+
+    errMsg = None
 
     if cur_count == 0 or len(cur_emails) == 0:
         errMsg = 'No current batch, something is probably wrong. Aborting.'
@@ -104,28 +107,69 @@ def lambda_handler(event, context):
 
     topic = os.environ.get('SLACK_TOPIC_ARN')
     chan = os.environ.get('SLACK_CHANNEL')
+
+    blocks = []
+    blocks.append({
+        "type": "header",
+        "text": {
+            "type": "plain_text",
+            "text": ":package: New member data has been synced from national",
+            "emoji": True
+        }
+	})
+    if errMsg:
+        blocks.append({
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": f":warning: `Error` {errMsg}"
+            }
+        })
+    blocks.append({
+        "type": "divider"
+    })
+    blocks.append({
+        "type": "section",
+        "fields": [
+            {
+                "type": "mrkdwn",
+                "text": f":balloon: New members: *{event['new_members'] if 'new_members' in event else 'error'}*"
+            },
+            {
+                "type": "mrkdwn",
+                "text": f":cry: Expired members: *{removed}*"
+            },
+            {
+                "type": "mrkdwn",
+                "text": f":tada: Updated members: *{event['updated_members'] if 'updated_members' in event else 'error'}*"
+            }
+        ]
+    })
+    blocks.append({
+        "type": "divider"
+    })
+    blocks.append({
+        "type": "context",
+        "elements": [
+            {
+                "type": "image",
+                "image_url": "https://github.com/favicon.ico",
+                "alt_text": "GitHub"
+            },
+            {
+                "type": "mrkdwn",
+                "text": "<https://github.com/BostonDSA/actionnetwork_activist_sync|BostonDSA/actionnetwork_activist_sync>\nData is synced weekly on Monday"
+            }
+        ]
+    })
+
     if False and not os.environ.get('ENVIRONMENT') == 'local' and topic and chan:
         sns_client.publish(
             TopicArn=topic,
             Message=json.dumps({
-                'channel': chan,
-                'text': 'New member data has arrived from national',
-                'attachments': [
-                    {
-                        'color': 'b71c1c',
-                        'fallback': 'New member data has arrived from national',
-                        'fields': [
-                            {
-                                'title': 'Number of rows',
-                                'value': count,
-                                'short': True
-                            }
-                        ],
-                        'footer': '<https://github.com/BostonDSA/actionnetwork_activist_sync|BostonDSA/actionnetwork_activist_sync>',
-                        'footer_icon': 'https://github.com/favicon.ico',
-
-                    }
-                ]
+                "channel": chan,
+                "text": "New member data has arrived from national",
+                "blocks": blocks
             }),
             MessageAttributes={
                 'id': {
