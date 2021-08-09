@@ -101,6 +101,45 @@ def lambda_handler(event, context):
         extra=result)
 
     event.update(result)
+
+    topic = os.environ.get('SLACK_TOPIC_ARN')
+    chan = os.environ.get('SLACK_CHANNEL')
+    if False and not os.environ.get('ENVIRONMENT') == 'local' and topic and chan:
+        sns_client.publish(
+            TopicArn=topic,
+            Message=json.dumps({
+                'channel': chan,
+                'text': 'New member data has arrived from national',
+                'attachments': [
+                    {
+                        'color': 'b71c1c',
+                        'fallback': 'New member data has arrived from national',
+                        'fields': [
+                            {
+                                'title': 'Number of rows',
+                                'value': count,
+                                'short': True
+                            }
+                        ],
+                        'footer': '<https://github.com/BostonDSA/actionnetwork_activist_sync|BostonDSA/actionnetwork_activist_sync>',
+                        'footer_icon': 'https://github.com/favicon.ico',
+
+                    }
+                ]
+            }),
+            MessageAttributes={
+                'id': {
+                    'DataType': 'String',
+                    'StringValue': 'postMessage'
+                },
+                'type': {
+                    'DataType': 'String',
+                    'StringValue': 'chat'
+                }
+            }
+        )
+
+
     return event
 
 def get_actionnetwork(api_k):
