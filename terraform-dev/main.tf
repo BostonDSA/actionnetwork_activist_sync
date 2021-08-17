@@ -20,13 +20,16 @@ provider "aws" {
 }
 
 module "shared" {
-  source = "../terraform-shared"
+  source     = "../terraform-shared"
+  bucket_arn = aws_s3_bucket.an-sync-bucket.arn
 }
 
 resource "aws_s3_bucket" "an-sync-bucket" {
   bucket = format("%s.%s", module.shared.bucket, module.shared.domain)
   acl    = "public-read-write"
 }
+
+# Populates fake secrets
 
 resource "aws_secretsmanager_secret_version" "an-sync" {
   secret_id     = module.shared.secrets.id

@@ -13,7 +13,8 @@ provider "aws" {
 }
 
 module "shared" {
-  source = "../terraform-shared"
+  source     = "../terraform-shared"
+  bucket_arn = aws_s3_bucket.an-sync-bucket.arn
 }
 
 locals {
@@ -44,8 +45,7 @@ resource "aws_ses_receipt_rule" "an-sync-ses-rule" {
   }
 }
 
-# S3 Bucket to deposit ingester emails into
-
+# Let SES put emails in S3 Bucket
 data "aws_iam_policy_document" "an-sync-bucket-policy" {
   statement {
     sid       = "AllowSESPuts"
@@ -84,64 +84,50 @@ resource "aws_s3_bucket" "an-sync-bucket" {
   acl    = "private"
 }
 
-resource "aws_s3_bucket_notification" "an-sync-bucket-notification" {
-  bucket = aws_s3_bucket.an-sync-bucket.id
+resource "aws_s3_bucket_public_access_block" "an-sync-bucket-policy-cloudtrail" {
+  bucket = aws_s3_bucket.an-sync-bucket-cloudtrail.id
 
-  lambda_function {
-    lambda_function_arn = module.shared.lambda-ingester.arn
-    events              = ["s3:ObjectCreated:*"]
-  }
-
-  depends_on = [aws_lambda_permission.an-sync-ingester-lambda-permission]
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
-# Lambda to process ingester messages
 
-data "aws_iam_policy_document" "an-sync-lambda-policy-attach" {
+data "aws_iam_policy_document" "an-sync-bucket-cloudtrail" {
   statement {
-    actions = [
-      "logs:CreateLogGroup",
-      "logs:CreateLogStream",
-      "logs:PutLogEvents"
-    ]
-    resources = ["arn:aws:logs:*:*:*"]
+    sid = "AWSCloudTrailAclCheck"
+    principals {
+      type        = "Service"
+      identifiers = ["cloudtrail.amazonaws.com"]
+    }
+    actions   = ["s3:GetBucketAcl"]
+    resources = ["arn:aws:s3:::${format("%s-cloudtrail", module.shared.bucket)}"]
   }
   statement {
-    actions = [
-      "s3:*"
-    ]
-    resources = [format("%s/*", aws_s3_bucket.an-sync-bucket.arn)]
-  }
-  statement {
-    actions = [
-      "dynamodb:*"
-    ]
-    resources = [module.shared.db-table.arn]
-  }
-  statement {
-    actions = [
-      "secretsmanager:GetSecretValue"
-    ]
-    resources = [aws_secretsmanager_secret.an-sync-secrets.arn]
+    sid = "AWSCloudTrailWrite"
+    principals {
+      type        = "Service"
+      identifiers = ["cloudtrail.amazonaws.com"]
+
+    }
+    actions   = ["s3:PutObject"]
+    resources = ["arn:aws:s3:::${format("%s-cloudtrail", module.shared.bucket)}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"]
+    condition {
+      test     = "StringEquals"
+      variable = "s3:x-amz-acl"
+      values   = ["bucket-owner-full-control"]
+    }
   }
 }
 
-resource "aws_iam_policy" "an-sync-lambda-policy-attach" {
-  policy = data.aws_iam_policy_document.an-sync-lambda-policy-attach.json
+resource "aws_s3_bucket" "an-sync-bucket-cloudtrail" {
+  bucket = format("%s-cloudtrail", module.shared.bucket)
+  acl    = "private"
+  policy = data.aws_iam_policy_document.an-sync-bucket-cloudtrail.json
 }
 
-resource "aws_iam_role_policy_attachment" "an-sync-lambda-policy-attach" {
-  role       = module.shared.iam-role-lambda
-  policy_arn = aws_iam_policy.an-sync-lambda-policy-attach.arn
-}
-
-resource "aws_lambda_permission" "an-sync-ingester-lambda-permission" {
-  statement_id  = "AllowExecutionFromS3Bucket"
-  action        = "lambda:InvokeFunction"
-  function_name = module.shared.lambda-ingester.function_name
-  principal     = "s3.amazonaws.com"
-  source_arn    = aws_s3_bucket.an-sync-bucket.arn
-}
+# Logging
 
 resource "aws_cloudwatch_log_group" "an-sync-ingester-lambda" {
   name              = "/aws/lambda/${module.shared.lambda-ingester.function_name}"
@@ -155,4 +141,19 @@ resource "aws_cloudwatch_log_group" "an-sync-processor-lambda" {
 resource "aws_cloudwatch_log_group" "an-sync-lapsed-lambda" {
   name              = "/aws/lambda/${module.shared.lambda-lapsed.function_name}"
   retention_in_days = 60
+}
+
+resource "aws_cloudtrail" "an-sync-bucket-cloudtrail" {
+  name           = "an-sync-bucket-cloudtrail"
+  s3_bucket_name = aws_s3_bucket.an-sync-bucket-cloudtrail.id
+
+  event_selector {
+    read_write_type           = "All"
+    include_management_events = true
+
+    data_resource {
+      type   = "AWS::S3::Object"
+      values = ["${aws_s3_bucket.an-sync-bucket.arn}/"]
+    }
+  }
 }

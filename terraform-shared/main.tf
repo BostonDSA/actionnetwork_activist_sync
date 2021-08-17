@@ -1,3 +1,7 @@
+variable "bucket_arn" {
+  type = string
+}
+
 resource "aws_dynamodb_table" "an-sync" {
   name           = var.project
   billing_mode   = "PAY_PER_REQUEST"
@@ -32,6 +36,46 @@ resource "aws_iam_role" "an-sync-lambda-role" {
   name               = "an-sync-lambda-role"
   assume_role_policy = data.aws_iam_policy_document.an-sync-lambda-policy-assume.json
 }
+
+data "aws_iam_policy_document" "an-sync-lambda-policy-attach" {
+  statement {
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+    resources = ["arn:aws:logs:*:*:*"]
+  }
+  statement {
+    actions = [
+      "s3:*"
+    ]
+    resources = ["${var.bucket_arn}/*"]
+  }
+  statement {
+    actions = [
+      "dynamodb:*"
+    ]
+    resources = [aws_dynamodb_table.an-sync.arn]
+  }
+  statement {
+    actions = [
+      "secretsmanager:GetSecretValue"
+    ]
+    resources = [aws_secretsmanager_secret.an-sync-secrets.arn]
+  }
+}
+
+resource "aws_iam_policy" "an-sync-lambda-policy-attach" {
+  name   = "an-sync-lambda-policy-attach"
+  policy = data.aws_iam_policy_document.an-sync-lambda-policy-attach.json
+}
+
+resource "aws_iam_role_policy_attachment" "an-sync-lambda-policy-attach" {
+  role       = aws_iam_role.an-sync-lambda-role.id
+  policy_arn = aws_iam_policy.an-sync-lambda-policy-attach.arn
+}
+
 
 resource "aws_lambda_function" "an-sync-ingester-lambda" {
   description      = "Action Network Sync S3 Ingester (Step 1)"
