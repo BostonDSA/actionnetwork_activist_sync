@@ -127,6 +127,43 @@ resource "aws_s3_bucket" "an-sync-bucket-cloudtrail" {
   policy = data.aws_iam_policy_document.an-sync-bucket-cloudtrail.json
 }
 
+resource "aws_cloudtrail" "an-sync-bucket-cloudtrail" {
+  name           = "an-sync-bucket-cloudtrail"
+  s3_bucket_name = aws_s3_bucket.an-sync-bucket-cloudtrail.id
+
+  event_selector {
+    read_write_type           = "All"
+    include_management_events = false
+
+    data_resource {
+      type   = "AWS::S3::Object"
+      values = ["${aws_s3_bucket.an-sync-bucket.arn}/"]
+    }
+  }
+}
+
+# CloudWatch Event that triggers off CloudTrail
+resource "aws_cloudwatch_event_rule" "an-sync-bucket-cloudtrail" {
+  name        = "an-sync-bucket-cloudtrail"
+  description = "Capture bucket uploads"
+
+  event_pattern = <<EOF
+{
+  "detail": {
+    "eventSource": ["s3.amazonaws.com"],
+    "eventName": ["PutObject"]
+  }
+}
+EOF
+}
+
+resource "aws_cloudwatch_event_target" "step" {
+  rule      = aws_cloudwatch_event_rule.an-sync-bucket-cloudtrail.name
+  target_id = "S3toStep"
+  arn       = module.shared.step.arn
+  role_arn  = module.shared.iam-role-step.arn
+}
+
 # Logging
 
 resource "aws_cloudwatch_log_group" "an-sync-ingester-lambda" {
@@ -143,17 +180,3 @@ resource "aws_cloudwatch_log_group" "an-sync-lapsed-lambda" {
   retention_in_days = 60
 }
 
-resource "aws_cloudtrail" "an-sync-bucket-cloudtrail" {
-  name           = "an-sync-bucket-cloudtrail"
-  s3_bucket_name = aws_s3_bucket.an-sync-bucket-cloudtrail.id
-
-  event_selector {
-    read_write_type           = "All"
-    include_management_events = true
-
-    data_resource {
-      type   = "AWS::S3::Object"
-      values = ["${aws_s3_bucket.an-sync-bucket.arn}/"]
-    }
-  }
-}

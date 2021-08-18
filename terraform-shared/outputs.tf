@@ -41,3 +41,11 @@ output "iam-role-lambda" {
 output "secrets" {
   value = aws_secretsmanager_secret.an-sync-secrets
 }
+
+output "step" {
+  value = aws_sfn_state_machine.an-sync-state-machine
+}
+
+output "iam-role-step" {
+  value = aws_iam_role.an-sync-step
+}
