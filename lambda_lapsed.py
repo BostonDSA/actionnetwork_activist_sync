@@ -66,15 +66,15 @@ def lambda_handler(event, context):
     errMsg = None
 
     if cur_count == 0 or len(cur_emails) == 0:
-        errMsg = 'No current batch, something is probably wrong. Aborting.'
+        errMsg = 'No current batch, something is probably wrong.'
         logger.error(errMsg)
 
     if prev_count == 0 or len(prev_emails) == 0:
-        errMsg = 'No previous batch. If this is not the first week, then something is probably wrong. Aborting.'
+        errMsg = 'No previous batch. If this is not the first week, then something is probably wrong.'
         logger.error(errMsg)
 
     logger.info(
-        'Checking previous email list against current',
+        'Checking previous email list against current.',
         extra={
             'cur_email_count': len(cur_emails),
             'prev_email_count': len(prev_emails)
@@ -87,7 +87,7 @@ def lambda_handler(event, context):
         for prev_email in prev_emails:
             if prev_email not in cur_emails:
                 logger.info(
-                    'Turing is_member off for lapsed member',
+                    'Turing is_member off for lapsed member.',
                     extra={'email': prev_email}
                 )
                 if not dry_run:
@@ -113,7 +113,7 @@ def lambda_handler(event, context):
         "type": "header",
         "text": {
             "type": "plain_text",
-            "text": ":package: New member data has been synced from national",
+            "text": ":package: New member data has been synced from national.",
             "emoji": True
         }
 	})
@@ -163,12 +163,14 @@ def lambda_handler(event, context):
         ]
     })
 
+    logger.info('Message blocks.', extra=blocks)
+
     if os.environ.get('SLACK_ENABLED') == '1' and topic and chan:
         sns_client.publish(
             TopicArn=topic,
             Message=json.dumps({
                 "channel": chan,
-                "text": "New member data has arrived from national",
+                "text": "New member data has arrived from national.",
                 "blocks": blocks
             }),
             MessageAttributes={
