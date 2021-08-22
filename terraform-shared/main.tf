@@ -148,7 +148,10 @@ data "aws_iam_policy_document" "an-sync-step-policy-assume" {
 
     principals {
       type        = "Service"
-      identifiers = ["states.amazonaws.com"]
+      identifiers = [
+        "states.amazonaws.com",
+        "events.amazonaws.com"
+        ]
     }
   }
 }
@@ -162,6 +165,14 @@ data "aws_iam_policy_document" "an-sync-step-invoke" {
       aws_lambda_function.an-sync-ingester-lambda.arn,
       aws_lambda_function.an-sync-processor-lambda.arn,
       aws_lambda_function.an-sync-lapsed-lambda.arn
+    ]
+  }
+  statement {
+    actions = [
+      "states:StartExecution"
+    ]
+    resources = [
+      aws_sfn_state_machine.an-sync-state-machine.arn
     ]
   }
 }
@@ -190,6 +201,7 @@ resource "aws_sfn_state_machine" "an-sync-state-machine" {
     "Ingester": {
       "Type": "Task",
       "Resource": "${aws_lambda_function.an-sync-ingester-lambda.arn}",
+      "InputPath": "$.detail.requestParameters",
       "Next": "Processor"
     },
 
