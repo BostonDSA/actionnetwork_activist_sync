@@ -64,6 +64,13 @@ data "aws_iam_policy_document" "an-sync-lambda-policy-attach" {
     ]
     resources = [aws_secretsmanager_secret.an-sync-secrets.arn]
   }
+  statement {
+    actions = [
+      "sns:Publish"
+    ]
+    # TODO Replace hardcoding
+    resources = ["arn:aws:sns:us-east-1:715992480927:slack-socialismbot"]
+  }
 }
 
 resource "aws_iam_policy" "an-sync-lambda-policy-attach" {
@@ -104,7 +111,7 @@ resource "aws_lambda_function" "an-sync-processor-lambda" {
   role             = aws_iam_role.an-sync-lambda-role.arn
   handler          = "lambda_processor.lambda_handler"
   runtime          = "python3.7"
-  timeout          = 60
+  timeout          = 600
 
   environment {
     variables = {
@@ -145,15 +152,15 @@ resource "aws_lambda_function" "an-sync-lapsed-lambda" {
 data "aws_iam_policy_document" "an-sync-step-policy-assume" {
   policy_id = "an-sync-step-policy-assume"
   statement {
-    sid = "StateMachineAssume"
+    sid     = "StateMachineAssume"
     actions = ["sts:AssumeRole"]
 
     principals {
-      type        = "Service"
+      type = "Service"
       identifiers = [
         "states.amazonaws.com",
         "events.amazonaws.com"
-        ]
+      ]
     }
   }
 }

@@ -158,7 +158,8 @@ def lambda_handler(event, context):
             },
             {
                 "type": "mrkdwn",
-                "text": "<https://github.com/BostonDSA/actionnetwork_activist_sync|BostonDSA/actionnetwork_activist_sync>\nData is synced weekly on Monday"
+                "text": "<https://github.com/BostonDSA/actionnetwork_activist_sync|BostonDSA/actionnetwork_activist_sync>\nData is synced weekly on Monday",
+                "verbatim": True
             }
         ]
     })
