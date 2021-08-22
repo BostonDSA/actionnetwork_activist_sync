@@ -38,7 +38,7 @@ if api_key.startswith('arn'):
 else:
     logger.debug('Using API key from Env')
 
-batch_size = 10
+batch_size = 200
 
 def lambda_handler(event, context):
     """

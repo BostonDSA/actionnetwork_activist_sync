@@ -163,8 +163,6 @@ def lambda_handler(event, context):
         ]
     })
 
-    logger.info('Message blocks.', extra=blocks)
-
     if os.environ.get('SLACK_ENABLED') == '1' and topic and chan:
         sns_client.publish(
             TopicArn=topic,
