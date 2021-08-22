@@ -143,7 +143,9 @@ resource "aws_lambda_function" "an-sync-lapsed-lambda" {
 }
 
 data "aws_iam_policy_document" "an-sync-step-policy-assume" {
+  policy_id = "an-sync-step-policy-assume"
   statement {
+    sid = "StateMachineAssume"
     actions = ["sts:AssumeRole"]
 
     principals {
@@ -157,7 +159,9 @@ data "aws_iam_policy_document" "an-sync-step-policy-assume" {
 }
 
 data "aws_iam_policy_document" "an-sync-step-invoke" {
+  policy_id = "an-sync-step-invoke"
   statement {
+    sid = "StateMachineInvokeLambda"
     actions = [
       "lambda:InvokeFunction"
     ]
@@ -168,6 +172,7 @@ data "aws_iam_policy_document" "an-sync-step-invoke" {
     ]
   }
   statement {
+    sid = "StateMachineStartExecution"
     actions = [
       "states:StartExecution"
     ]
@@ -219,7 +224,7 @@ resource "aws_sfn_state_machine" "an-sync-state-machine" {
           "BooleanEquals": true,
           "Next": "Processor"
         }
-       ],
+      ],
       "Default": "Lapsed"
     },
 
