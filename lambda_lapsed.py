@@ -91,7 +91,14 @@ def lambda_handler(event, context):
                     extra={'email': prev_email}
                 )
                 if not dry_run:
-                    action_network.remove_member_by_email(prev_email)
+                    try:
+                        action_network.remove_member_by_email(prev_email)
+                    except:
+                        logger.error(
+                            'Error removing lapsed member',
+                            extra={'email': prev_email}
+                        )
+                        continue
                 removed += 1
 
     result = {
