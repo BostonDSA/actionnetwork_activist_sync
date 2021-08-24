@@ -100,13 +100,14 @@ def lambda_handler(event, context):
                 # We can't continue processing without an email
                 continue
 
-            state = State(
-                batch,
-                d_row['Email'],
-                raw=json.dumps(d_row),
-                status=State.UNPROCESSED
-            )
-            state.save()
+            if not 'skip_db' in event:
+                state = State(
+                    batch,
+                    d_row['Email'],
+                    raw=json.dumps(d_row),
+                    status=State.UNPROCESSED
+                )
+                state.save()
 
             count += 1
 
