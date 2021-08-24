@@ -113,7 +113,11 @@ def lambda_handler(event, context):
 
         logger.info('Finished processing CSV.', extra={'num_rows': count})
 
-    return {
+    result = {
         'batch': batch,
         'ingested_rows': count
     }
+    # forward the input
+    event.update(result)
+
+    return event
