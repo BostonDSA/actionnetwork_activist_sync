@@ -12,6 +12,7 @@ localstack-client = "*"
 pylint = "*"
 python-lambda-local = "*"
 green = "*"
+moto = {extras = [ "dynamodb2", "s3", "secretsmanager",], version = "*"}
 
 [packages]
 agate = "*"
@@ -23,10 +24,7 @@ dictdiffer = "*"
 pyactionnetwork = "*"
 pynamodb = "*"
 python-json-logger = "*"
+tenacity = "*"
 
 [requires]
 python_version = "3.7"
-
-[dev-packages.moto]
-extras = [ "dynamodb2", "s3", "secretsmanager",]
-version = "*"

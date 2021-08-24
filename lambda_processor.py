@@ -10,6 +10,7 @@ import os
 
 from agate.rows import Row
 import boto3
+from tenacity import Retrying, stop_after_attempt, wait_fixed
 
 from actionnetwork_activist_sync.actionnetwork import ActionNetwork
 from actionnetwork_activist_sync.logging import get_logger
@@ -79,7 +80,9 @@ def lambda_handler(event, context):
             new += 1
 
             if not dry_run:
-                actionnetwork.create_person(**person)
+                for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(5)):
+                    with attempt:
+                        actionnetwork.create_person(**person)
         else:
             for existing_person in people:
                 field_mapper.person_id = existing_person.get_actionnetwork_id()
@@ -93,7 +96,9 @@ def lambda_handler(event, context):
                 updated += 1
 
                 if not dry_run:
-                    actionnetwork.update_person(**updated_person)
+                    for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(5)):
+                        with attempt:
+                            actionnetwork.update_person(**updated_person)
 
         item.status = State.PROCESSED
         item.save()
