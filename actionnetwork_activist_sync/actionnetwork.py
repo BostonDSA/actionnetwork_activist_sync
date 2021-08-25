@@ -30,10 +30,11 @@ class ActionNetwork(ActionNetworkApi):
         for person in people:
             for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(5)):
                 with attempt:
-                    response = self.update_person(
-                        person_id=person.get_actionnetwork_id(),
-                        custom_fields={'is_member': 'False'}
-                    )
+                    url = "{0}people/{1}".format(self.base_url, person.get_actionnetwork_id())
+                    payload = {
+                        'custom_fields': {'is_member': 'False'}
+                    }
+                    response = requests.put(url, json=payload, headers=self.headers).json()
 
             updated_people.append(Person(**response))
         return updated_people
