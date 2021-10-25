@@ -1,4 +1,4 @@
-FROM lambci/lambda:build-python3.7 AS build
+FROM lambci/lambda:build-python3.9 AS build
 
 COPY Pipfile* /var/task
 COPY *.py /var/task
