@@ -32,6 +32,9 @@ class ActionNetwork(ActionNetworkApi):
                 with attempt:
                     url = "{0}people/{1}".format(self.base_url, person.get_actionnetwork_id())
                     payload = {
+                        'email_addresses': [{
+                            'address': email
+                        }],
                         'custom_fields': {'is_member': 'False'}
                     }
                     response = requests.put(url, json=payload, headers=self.headers).json()
