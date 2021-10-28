@@ -8,28 +8,27 @@ This repository provides automation around syncing ActionKit CSV exports to Acti
 
 ## Cloud Mode
 
-The automated version runs in AWS. It's broken into a few different pieces to handle different parts of the process.
+The automated version runs in AWS. It's broken into a few different pieces to handle different parts of the process. The process is now coordinated by a step function.
+
+![Step Function](docs/stepfunction.png)
+
+Simple Email Service is set up to forward emails to a bucket. The step function gets triggered when an object gets put in an S3 bucket.
 
 ### Ingester
-
-![Ingester](docs/an-sync-ingester.png)
 
 The Ingester reads the email message and converts the data into Items in the DynamoDB.
 
 ### Processor
 
-![Processor](docs/an-sync-processor.png)
-
-The Processor gets triggered off changes to the DynamoDB table. It only pays attention to new Items and ignores everything else. The changes are batched. The state gets updated in the DynamoDB table.
-
-The Processor only handles creating records for new and updating existing people. The custom field `is_member` gets marked `True`.
+The Processor reads unprocessed Items from the DynamoDB table in batches. This continues until there is no more work to do. The Processor only handles creating records for new and updating existing people. The custom field `is_member` gets marked `True`.
 
 ### Lapsed
 
-The Lapsed process is a background job that runs weekly. It looks for Items in the DynamoDB table that were present last week, but were no longer present in the current week. The custom field `is_member` gets marked to `False`.
+The Lapsed process happens as a clean-up step. It looks for Items in the DynamoDB table that were present last week, but were no longer present in the current week. The custom field `is_member` gets marked to `False`. It also notifies a slack channel with information about changes in membership.
+
 # Development
 
-## Prerequesites
+## Prerequisites
 
 ### Pipenv
 
@@ -52,7 +51,7 @@ Most of the common tasks are in the [Makefile](Makefile/).
 
 ### Local Development
 
-Local development is possible with [LocalStack](https://github.com/localstack/localstack). The [terraform-dev](terraform-dev) dir will handle making the resources needed for development after the LocalStack is running. The [samples](samples) directory also has files useful for local develpment.
+Local development is possible with [LocalStack](https://github.com/localstack/localstack). The [terraform-dev](terraform-dev) dir will handle making the resources needed for development after the LocalStack is running. The [samples](samples) directory also has files useful for local development.
 
 ### Unit Tests
 
