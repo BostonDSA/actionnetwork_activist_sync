@@ -5,7 +5,7 @@ from datetime import datetime
 from decimal import Decimal
 import unittest
 
-from agate import Row
+from agate import Row, Table
 from ddt import ddt, data, unpack
 
 from actionnetwork_activist_sync.field_mapper import FieldMapper
@@ -63,3 +63,14 @@ class TestFieldMapper(unittest.TestCase):
         field_mapper = FieldMapper(Row([value], [key]))
         custom_fields = field_mapper.get_custom_fields()
         self.assertEqual(custom_fields[expected_key], expected_value)
+
+    @data(
+        ('2020-01-01', 'member', False),
+        ('2030-01-01', 'member', True),
+        ('2030-01-01', 'expired', False),
+    )
+    @unpack
+    def test_get_is_member(self, xdate, membership_status, expected):
+        table = Table.from_object([{'Xdate': xdate, 'membership_status': membership_status}])
+        field_mapper = FieldMapper(table.rows[0])
+        self.assertEqual(field_mapper.get_is_member(), expected)

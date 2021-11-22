@@ -23,14 +23,15 @@ from actionnetwork_activist_sync.state_model import State
 
 logger = get_logger('lambda_ingester')
 
-dynamodb_client = boto3.client('dynamodb')
-s3_client = boto3.client('s3')
-secrets_client = boto3.client('secretsmanager')
-
 if os.environ.get('ENVIRONMENT') == 'local':
     import localstack_client.session
-    dynamodb_client = localstack_client.session.Session().client('dynamodb')
-    s3_client = localstack_client.session.Session().client('s3')
+    session = localstack_client.session.Session()
+else:
+    session = boto3.session.Session()
+
+dynamodb_client = session.client('dynamodb')
+s3_client = session.client('s3')
+secrets_client = session.client('secretsmanager')
 
 dsa_key = os.environ['DSA_KEY']
 if dsa_key.startswith('arn'):
@@ -51,54 +52,55 @@ def lambda_handler(event, context):
     will be ingested into DynamoDB.
     """
 
-    for record in event['Records']:
+    count = 0
 
-        # Fetch email from bucket
-        bucket = record['s3']['bucket']['name']
-        key = unquote_plus(record['s3']['object']['key'])
-        tmpkey = key.replace('/', '')
-        download_path = f'/tmp/{uuid.uuid4()}{tmpkey}'
-        logger.info(
-            'Downloading file from bucket',
-            extra={"bucket": bucket, "key": key, "download_path": download_path})
-        s3_client.download_file(bucket, key, download_path)
+    # Fetch email from bucket
+    bucket = event['bucketName']
+    key = unquote_plus(event['key'])
+    tmpkey = key.replace('/', '')
+    download_path = f'/tmp/{uuid.uuid4()}{tmpkey}'
+    logger.info(
+        'Downloading file from bucket',
+        extra={"bucket": bucket, "key": key, "download_path": download_path})
+    s3_client.download_file(bucket, key, download_path)
 
-        with open(download_path) as email_file:
-            # The full email gets deposited in the S3 bucket
-            msg = email.message_from_file(email_file, policy=email.policy.default)
+    with open(download_path) as email_file:
+        # The full email gets deposited in the S3 bucket
+        msg = email.message_from_file(email_file, policy=email.policy.default)
 
-            if dsa_key != msg.get('DsaKey'):
-                raise ValueError('DSA Key not found in email header, aborting.')
+        if dsa_key != msg.get('DsaKey'):
+            raise ValueError('DSA Key not found in email header, aborting.')
 
-            # ActionKit mails the report as an attached ZIP file
-            attach = next(msg.iter_attachments())
+        # ActionKit mails the report as an attached ZIP file
+        attach = next(msg.iter_attachments())
 
-            if not attach.get_content_type() in ['application/zip', 'application/x-zip-compressed']:
-                logger.error(
-                    'Attachment is not ZIP',
-                    extra={'content_type': attach.get_content_type()})
-                raise ValueError('Attachment is not ZIP')
+        if not attach.get_content_type() in ['application/zip', 'application/x-zip-compressed']:
+            logger.error(
+                'Attachment is not ZIP',
+                extra={'content_type': attach.get_content_type()})
+            raise ValueError('Attachment is not ZIP')
 
-            zip_data = io.BytesIO(attach.get_content())
+        zip_data = io.BytesIO(attach.get_content())
 
-            with zipfile.ZipFile(zip_data) as zip:
-                names = zip.namelist()
-                if len(names) != 1:
-                    raise ValueError('ZIP archive has wrong number of files')
+        with zipfile.ZipFile(zip_data) as zip:
+            names = zip.namelist()
+            if len(names) != 1:
+                raise ValueError('ZIP archive has wrong number of files')
 
-                if not names[0].endswith('.csv'):
-                    raise ValueError('ZIP archive is missing CSV file')
+            if not names[0].endswith('.csv'):
+                raise ValueError('ZIP archive is missing CSV file')
 
-                csv_lines = io.StringIO(zip.read(names[0]).decode('utf-8'))
+            csv_lines = io.StringIO(zip.read(names[0]).decode('utf-8'))
 
-            count = 0
-            for row in csv.DictReader(csv_lines):
-                d_row = dict(row)
 
-                if 'Email' not in d_row or not d_row['Email']:
-                    # We can't continue processing without an email
-                    continue
+        for row in csv.DictReader(csv_lines):
+            d_row = dict(row)
 
+            if 'Email' not in d_row or not d_row['Email']:
+                # We can't continue processing without an email
+                continue
+
+            if not 'skip_db' in event:
                 state = State(
                     batch,
                     d_row['Email'],
@@ -107,6 +109,15 @@ def lambda_handler(event, context):
                 )
                 state.save()
 
-                count += 1
+            count += 1
 
-            logger.info('Finished processing CSV.', extra={'num_rows': count})
+        logger.info('Finished processing CSV.', extra={'num_rows': count})
+
+    result = {
+        'batch': batch,
+        'ingested_rows': count
+    }
+    # forward the input
+    event.update(result)
+
+    return event

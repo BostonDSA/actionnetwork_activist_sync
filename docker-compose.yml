@@ -2,20 +2,15 @@ version: '2.1'
 
 services:
   localstack:
-    container_name: "${LOCALSTACK_DOCKER_NAME-localstack_main}"
+    container_name: "localstack_main"
     image: localstack/localstack
     ports:
       - "4566-4599:4566-4599"
-      - "${PORT_WEB_UI-8080}:${PORT_WEB_UI-8080}"
+      - 5678:5678
+    env_file:
+      - .env
     environment:
-      - SERVICES=${SERVICES- }
+      - SERVICES=dynamodb,eventbridge,iam,lambda,s3,secretsmanager,stepfunctions
+      - LAMBDA_EXECUTOR=local
       - DEBUG=1
-      - DATA_DIR=${DATA_DIR- }
-      - PORT_WEB_UI=${PORT_WEB_UI- }
-      - LAMBDA_EXECUTOR=${LAMBDA_EXECUTOR- }
-      - KINESIS_ERROR_PROBABILITY=${KINESIS_ERROR_PROBABILITY- }
-      - DOCKER_HOST=unix:///var/run/docker.sock
-      - HOST_TMP_FOLDER=${TMPDIR}
-    volumes:
-      - "${TMPDIR:-/tmp/localstack}:/tmp/localstack"
-      - "/var/run/docker.sock:/var/run/docker.sock"
+      - DEVELOP=1

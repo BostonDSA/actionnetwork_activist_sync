@@ -13,7 +13,8 @@ provider "aws" {
 }
 
 module "shared" {
-  source = "../terraform-shared"
+  source     = "../terraform-shared"
+  bucket_arn = aws_s3_bucket.an-sync-bucket.arn
 }
 
 locals {
@@ -44,8 +45,7 @@ resource "aws_ses_receipt_rule" "an-sync-ses-rule" {
   }
 }
 
-# S3 Bucket to deposit ingester emails into
-
+# Let SES put emails in S3 Bucket
 data "aws_iam_policy_document" "an-sync-bucket-policy" {
   statement {
     sid       = "AllowSESPuts"
@@ -84,222 +84,99 @@ resource "aws_s3_bucket" "an-sync-bucket" {
   acl    = "private"
 }
 
-resource "aws_s3_bucket_notification" "an-sync-bucket-notification" {
-  bucket = aws_s3_bucket.an-sync-bucket.id
+resource "aws_s3_bucket_public_access_block" "an-sync-bucket-policy-cloudtrail" {
+  bucket = aws_s3_bucket.an-sync-bucket-cloudtrail.id
 
-  lambda_function {
-    lambda_function_arn = aws_lambda_function.an-sync-ingester-lambda.arn
-    events              = ["s3:ObjectCreated:*"]
-  }
-
-  depends_on = [aws_lambda_permission.an-sync-ingester-lambda-permission]
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
-# Lambda to process ingester messages
 
-data "aws_iam_policy_document" "an-sync-lambda-policy-assume" {
+data "aws_iam_policy_document" "an-sync-bucket-cloudtrail" {
   statement {
-    actions = ["sts:AssumeRole"]
-
+    sid = "AWSCloudTrailAclCheck"
     principals {
       type        = "Service"
-      identifiers = ["lambda.amazonaws.com"]
+      identifiers = ["cloudtrail.amazonaws.com"]
+    }
+    actions   = ["s3:GetBucketAcl"]
+    resources = ["arn:aws:s3:::${format("%s-cloudtrail", module.shared.bucket)}"]
+  }
+  statement {
+    sid = "AWSCloudTrailWrite"
+    principals {
+      type        = "Service"
+      identifiers = ["cloudtrail.amazonaws.com"]
+
+    }
+    actions   = ["s3:PutObject"]
+    resources = ["arn:aws:s3:::${format("%s-cloudtrail", module.shared.bucket)}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"]
+    condition {
+      test     = "StringEquals"
+      variable = "s3:x-amz-acl"
+      values   = ["bucket-owner-full-control"]
     }
   }
 }
 
-data "aws_iam_policy_document" "an-sync-lambda-policy-attach" {
-  statement {
-    actions = [
-      "logs:CreateLogGroup",
-      "logs:CreateLogStream",
-      "logs:PutLogEvents"
-    ]
-    resources = ["arn:aws:logs:*:*:*"]
-  }
-  statement {
-    actions = [
-      "s3:*"
-    ]
-    resources = [format("%s/*", aws_s3_bucket.an-sync-bucket.arn)]
-  }
-  statement {
-    actions = [
-      "dynamodb:*"
-    ]
-    resources = [module.shared.db-table.arn, module.shared.db-table.stream_arn]
-  }
-  statement {
-    actions = [
-      "secretsmanager:GetSecretValue"
-    ]
-    resources = [aws_secretsmanager_secret.an-sync-secrets.arn]
-  }
+resource "aws_s3_bucket" "an-sync-bucket-cloudtrail" {
+  bucket = format("%s-cloudtrail", module.shared.bucket)
+  acl    = "private"
+  policy = data.aws_iam_policy_document.an-sync-bucket-cloudtrail.json
 }
 
-resource "aws_iam_policy" "an-sync-lambda-policy-attach" {
-  policy = data.aws_iam_policy_document.an-sync-lambda-policy-attach.json
-}
+resource "aws_cloudtrail" "an-sync-bucket-cloudtrail" {
+  name           = "an-sync-bucket-cloudtrail"
+  s3_bucket_name = aws_s3_bucket.an-sync-bucket-cloudtrail.id
 
-resource "aws_iam_role" "an-sync-lambda-role" {
-  name               = "an-sync-lambda-role"
-  assume_role_policy = data.aws_iam_policy_document.an-sync-lambda-policy-assume.json
-}
+  event_selector {
+    read_write_type           = "All"
+    include_management_events = false
 
-resource "aws_iam_role_policy_attachment" "an-sync-lambda-policy-attach" {
-  role       = aws_iam_role.an-sync-lambda-role.name
-  policy_arn = aws_iam_policy.an-sync-lambda-policy-attach.arn
-}
-
-resource "aws_lambda_permission" "an-sync-ingester-lambda-permission" {
-  statement_id  = "AllowExecutionFromS3Bucket"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.an-sync-ingester-lambda.function_name
-  principal     = "s3.amazonaws.com"
-  source_arn    = aws_s3_bucket.an-sync-bucket.arn
-}
-
-resource "aws_lambda_function" "an-sync-ingester-lambda" {
-  description      = "Action Network Sync S3 Ingester (Step 1)"
-  filename         = "../dist/sync.zip"
-  source_code_hash = filebase64sha256("../dist/sync.zip")
-  function_name    = "an-sync-ingester-lambda"
-  role             = aws_iam_role.an-sync-lambda-role.arn
-  handler          = "lambda_ingester.lambda_handler"
-  runtime          = "python3.7"
-  timeout          = 300
-
-  environment {
-    variables = {
-      DSA_KEY   = aws_secretsmanager_secret.an-sync-secrets.arn
-      LOG_LEVEL = "INFO"
+    data_resource {
+      type   = "AWS::S3::Object"
+      values = ["${aws_s3_bucket.an-sync-bucket.arn}/"]
     }
   }
-
 }
+
+# CloudWatch Event that triggers off CloudTrail
+resource "aws_cloudwatch_event_rule" "an-sync-bucket-cloudtrail" {
+  name        = "an-sync-bucket-cloudtrail"
+  description = "Capture bucket uploads"
+
+  event_pattern = <<EOF
+{
+  "detail": {
+    "eventSource": ["s3.amazonaws.com"],
+    "eventName": ["PutObject"]
+  }
+}
+EOF
+}
+
+resource "aws_cloudwatch_event_target" "step" {
+  rule      = aws_cloudwatch_event_rule.an-sync-bucket-cloudtrail.name
+  target_id = "S3toStep"
+  arn       = module.shared.step.arn
+  role_arn  = module.shared.iam-role-step.arn
+}
+
+# Logging
 
 resource "aws_cloudwatch_log_group" "an-sync-ingester-lambda" {
-  name              = "/aws/lambda/${aws_lambda_function.an-sync-ingester-lambda.function_name}"
+  name              = "/aws/lambda/${module.shared.lambda-ingester.function_name}"
   retention_in_days = 60
-}
-
-# Lambda to process the DynamoDB items
-
-resource "aws_lambda_event_source_mapping" "processor" {
-  event_source_arn       = module.shared.db-table.stream_arn
-  function_name          = aws_lambda_function.an-sync-processor-lambda.arn
-  starting_position      = "LATEST"
-  maximum_retry_attempts = 3
-  batch_size             = 10
-}
-
-resource "aws_lambda_function" "an-sync-processor-lambda" {
-  description      = "Action Network Sync DynamoDB Processor (Step 2)"
-  filename         = "../dist/sync.zip"
-  source_code_hash = filebase64sha256("../dist/sync.zip")
-  function_name    = "an-sync-processor-lambda"
-  role             = aws_iam_role.an-sync-lambda-role.arn
-  handler          = "lambda_processor.lambda_handler"
-  runtime          = "python3.7"
-  timeout          = 60
-
-  environment {
-    variables = {
-      ACTIONNETWORK_API_KEY = aws_secretsmanager_secret.an-sync-secrets.arn
-      DRY_RUN               = module.shared.dry-run-processor
-      LOG_LEVEL             = "INFO"
-    }
-  }
-
-  lifecycle {
-    ignore_changes = [environment]
-  }
 }
 
 resource "aws_cloudwatch_log_group" "an-sync-processor-lambda" {
-  name              = "/aws/lambda/${aws_lambda_function.an-sync-processor-lambda.function_name}"
+  name              = "/aws/lambda/${module.shared.lambda-processor.function_name}"
   retention_in_days = 60
 }
-
-# Lambda to process membership lapses
-
-data "aws_iam_policy_document" "an-sync-cw-event-assume" {
-  statement {
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["events.amazonaws.com"]
-    }
-  }
-}
-
-data "aws_iam_policy_document" "an-sync-cw-event-invoke" {
-  statement {
-    actions = [
-      "lambda:InvokeFunction"
-    ]
-    resources = [aws_lambda_function.an-sync-lapsed-lambda.arn]
-  }
-}
-
-resource "aws_iam_policy" "an-sync-cw-event" {
-  policy = data.aws_iam_policy_document.an-sync-cw-event-invoke.json
-}
-
-resource "aws_iam_role" "an-sync-cw-event" {
-  name               = "an-sync-cw-event"
-  assume_role_policy = data.aws_iam_policy_document.an-sync-cw-event-assume.json
-}
-
-resource "aws_iam_role_policy_attachment" "an-sync-cw-event" {
-  role       = aws_iam_role.an-sync-cw-event.name
-  policy_arn = aws_iam_policy.an-sync-cw-event.arn
-}
-
-resource "aws_cloudwatch_event_rule" "an-sync-lapsed" {
-  name        = "an-sync-lapsed"
-  description = "Weekly job to trigger lapsed lambda"
-  # Tuesday 7pm
-  schedule_expression = "cron(0 19 ? * 3 *)"
-}
-
-resource "aws_cloudwatch_event_target" "an-sync-lapsed" {
-  rule      = aws_cloudwatch_event_rule.an-sync-lapsed.name
-  target_id = "an-sync-trigger-lambda"
-  arn       = aws_lambda_function.an-sync-lapsed-lambda.arn
-}
-
-resource "aws_lambda_function" "an-sync-lapsed-lambda" {
-  description      = "Action Network Sync Lapsed Memberships (Step 3)"
-  filename         = "../dist/sync.zip"
-  source_code_hash = filebase64sha256("../dist/sync.zip")
-  function_name    = "an-sync-lapsed-lambda"
-  role             = aws_iam_role.an-sync-lambda-role.arn
-  handler          = "lambda_lapsed.lambda_handler"
-  runtime          = "python3.7"
-  timeout          = 600
-
-  environment {
-    variables = {
-      ACTIONNETWORK_API_KEY = aws_secretsmanager_secret.an-sync-secrets.arn
-      DRY_RUN               = module.shared.dry-run-lapsed
-      LOG_LEVEL             = "INFO"
-    }
-  }
-
-  lifecycle {
-    ignore_changes = [environment]
-  }
-}
-
 resource "aws_cloudwatch_log_group" "an-sync-lapsed-lambda" {
-  name              = "/aws/lambda/${aws_lambda_function.an-sync-lapsed-lambda.function_name}"
+  name              = "/aws/lambda/${module.shared.lambda-lapsed.function_name}"
   retention_in_days = 60
 }
 
-# Misc
-
-resource "aws_secretsmanager_secret" "an-sync-secrets" {
-  name = module.shared.project
-}

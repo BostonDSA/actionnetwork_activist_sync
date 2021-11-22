@@ -17,8 +17,16 @@ from actionnetwork_activist_sync.state_model import State
 logger = get_logger('lambda_lapsed')
 
 dry_run = os.environ.get('DRY_RUN') != '0'
-dynamodb_client = boto3.client('dynamodb')
-secrets_client = boto3.client('secretsmanager')
+
+if os.environ.get('ENVIRONMENT') == 'local':
+    import localstack_client.session
+    session = localstack_client.session.Session()
+else:
+    session = boto3.session.Session()
+
+dynamodb_client = session.client('dynamodb')
+secrets_client = session.client('secretsmanager')
+sns_client = session.client('sns')
 
 api_key = os.environ['ACTIONNETWORK_API_KEY']
 if api_key.startswith('arn'):
@@ -28,10 +36,6 @@ if api_key.startswith('arn'):
     logger.debug('Using API key from Secrets Manager')
 else:
     logger.debug('Using API key from Env')
-
-if os.environ.get('ENVIRONMENT') == 'local':
-    import localstack_client.session
-    dynamodb_client = localstack_client.session.Session().client('dynamodb')
 
 cur_batch = datetime.date.today().strftime('%Y%U')
 last_week = datetime.date.today() - datetime.timedelta(weeks=1)
@@ -59,19 +63,18 @@ def lambda_handler(event, context):
     cur_emails = [c.email for c in cur_items]
     prev_emails = [p.email for p in prev_items]
 
+    errMsg = None
+
     if cur_count == 0 or len(cur_emails) == 0:
-        errMsg = 'No current batch, something is probably wrong. Aborting.'
+        errMsg = 'No current batch, something is probably wrong.'
         logger.error(errMsg)
-        raise RuntimeError(errMsg)
 
     if prev_count == 0 or len(prev_emails) == 0:
-        errMsg = 'No previous batch. If this is not the first week, then something is probably wrong. Aborting.'
+        errMsg = 'No previous batch. If this is not the first week, then something is probably wrong.'
         logger.error(errMsg)
-        raise RuntimeError(errMsg)
-
 
     logger.info(
-        'Checking previous email list against current',
+        'Checking previous email list against current.',
         extra={
             'cur_email_count': len(cur_emails),
             'prev_email_count': len(prev_emails)
@@ -80,24 +83,116 @@ def lambda_handler(event, context):
 
     action_network = get_actionnetwork(api_key)
 
-    for prev_email in prev_emails:
-        if prev_email not in cur_emails:
-            logger.info(
-                'Turing is_member off for lapsed member',
-                extra={'email': prev_email}
-            )
-            if not dry_run:
-                action_network.remove_member_by_email(prev_email)
-            removed += 1
+    if prev_emails and cur_emails:
+        for prev_email in prev_emails:
+            if prev_email not in cur_emails:
+                logger.info(
+                    'Turing is_member off for lapsed member.',
+                    extra={'email': prev_email}
+                )
+                if not dry_run:
+                    try:
+                        action_network.remove_member_by_email(prev_email)
+                    except:
+                        logger.error(
+                            'Error removing lapsed member',
+                            extra={'email': prev_email}
+                        )
+                        continue
+                removed += 1
 
-    logger.info(
-        'Finished removing lapsed members.',
-        extra={
+    result = {
             'removed': removed,
             'cur_count': cur_count,
             'prev_count': prev_count
+    }
+    logger.info(
+        'Finished removing lapsed members.',
+        extra=result)
+
+    event.update(result)
+
+    topic = os.environ.get('SLACK_TOPIC_ARN')
+    chan = os.environ.get('SLACK_CHANNEL')
+
+    blocks = []
+    blocks.append({
+        "type": "header",
+        "text": {
+            "type": "plain_text",
+            "text": ":package: New member data has been synced from national.",
+            "emoji": True
+        }
+	})
+    if errMsg:
+        blocks.append({
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": f":warning: `Error` {errMsg}"
+            }
         })
-    return (removed, cur_count, prev_count)
+    blocks.append({
+        "type": "divider"
+    })
+    blocks.append({
+        "type": "section",
+        "fields": [
+            {
+                "type": "mrkdwn",
+                "text": f":balloon: New members: *{event['new_members'] if 'new_members' in event else 'error'}*"
+            },
+            {
+                "type": "mrkdwn",
+                "text": f":cry: Expired members: *{removed}*"
+            },
+            {
+                "type": "mrkdwn",
+                "text": f":tada: Updated members: *{event['updated_members'] if 'updated_members' in event else 'error'}*"
+            }
+        ]
+    })
+    blocks.append({
+        "type": "divider"
+    })
+    blocks.append({
+        "type": "context",
+        "elements": [
+            {
+                "type": "image",
+                "image_url": "https://github.com/favicon.ico",
+                "alt_text": "GitHub"
+            },
+            {
+                "type": "mrkdwn",
+                "text": "github.com/BostonDSA/actionnetwork_activist_sync\nData is synced weekly on Monday",
+                "verbatim": True
+            }
+        ]
+    })
+
+    if os.environ.get('SLACK_ENABLED') == '1' and topic and chan:
+        sns_client.publish(
+            TopicArn=topic,
+            Message=json.dumps({
+                "channel": chan,
+                "text": "New member data has arrived from national.",
+                "blocks": blocks
+            }),
+            MessageAttributes={
+                'id': {
+                    'DataType': 'String',
+                    'StringValue': 'postMessage'
+                },
+                'type': {
+                    'DataType': 'String',
+                    'StringValue': 'chat'
+                }
+            }
+        )
+
+
+    return event
 
 def get_actionnetwork(api_k):
     """Creates an ActionNetwork object.

@@ -13,6 +13,7 @@ pylint = "*"
 python-lambda-local = "*"
 green = "*"
 ipython = "*"
+moto = {extras = [ "dynamodb2", "s3", "secretsmanager",], version = "*"}
 
 [packages]
 agate = "*"
@@ -21,13 +22,11 @@ boto3 = "*"
 colored = "*"
 csvkit = "*"
 dictdiffer = "*"
-pyactionnetwork = "*"
+pyActionNetwork = "*"
 pynamodb = "*"
 python-json-logger = "*"
+tenacity = "*"
+python-dateutil = "*"
 
 [requires]
-python_version = "3.7"
-
-[dev-packages.moto]
-extras = [ "dynamodb2", "s3", "secretsmanager",]
-version = "*"
+python_version = "3.9"

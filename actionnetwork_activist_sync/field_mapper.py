@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Logic to convert people data from ActionKit to ActionNetwork"""
 
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal
 
 class FieldMapper:
@@ -21,7 +21,7 @@ class FieldMapper:
         self.exported_person = exported_person
         self.person_id = None
         self.overrides = {}
-        self.is_member = 'True'
+        self.is_member = self.get_is_member()
 
     def get_actionnetwork_person(self):
         """Main conversion method"""
@@ -81,6 +81,24 @@ class FieldMapper:
             postal_code = f'{postal_code:0>5}'
 
         return postal_code
+
+    def get_is_member(self):
+        """Calculates membership status"""
+
+        is_member = True
+
+        xdate = self.exported_person.get('Xdate')
+        if isinstance(xdate, date):
+            now = datetime.now().date()
+            delta = now - xdate
+
+            if delta.days > 60:
+                is_member = False
+
+        if self.exported_person.get('membership_status') == "expired":
+            is_member = False
+
+        return is_member
 
     def get_custom_fields(self):
         """Formats custom fields"""

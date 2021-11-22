@@ -10,13 +10,18 @@ provider "aws" {
 
 
   endpoints {
-    dynamodb = "http://localhost:4566"
-    s3       = "http://localhost:4566"
+    dynamodb       = "http://localhost:4566"
+    s3             = "http://localhost:4566"
+    secretsmanager = "http://localhost:4566"
+    stepfunctions  = "http://localhost:4566"
+    iam            = "http://localhost:4566"
+    lambda         = "http://localhost:4566"
   }
 }
 
 module "shared" {
-  source = "../terraform-shared"
+  source     = "../terraform-shared"
+  bucket_arn = aws_s3_bucket.an-sync-bucket.arn
 }
 
 resource "aws_s3_bucket" "an-sync-bucket" {
@@ -24,3 +29,18 @@ resource "aws_s3_bucket" "an-sync-bucket" {
   acl    = "public-read-write"
 }
 
+# Populates fake secrets
+
+resource "aws_secretsmanager_secret_version" "an-sync" {
+  secret_id     = module.shared.secrets.id
+  secret_string = jsonencode(var.secrets)
+}
+
+variable "secrets" {
+  default = {
+    DSA_KEY               = "TESTKEY"
+    ACTIONNETWORK_API_KEY = "TESTKEY"
+  }
+
+  type = map(string)
+}
