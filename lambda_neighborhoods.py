@@ -29,10 +29,9 @@ else:
 
 neighborhood_map = os.environ['NEIGHBORHOOD_MAP']
 if neighborhood_map.startswith('arn'):
-    raise NotImplementedError
-    # secret = secrets_client.get_secret_value(SecretId=api_key)
-    # secret_dict = json.loads(secret['SecretString'])
-    # logger.debug('Using API key from Secrets Manager')
+    secret = secrets_client.get_secret_value(SecretId=api_key)
+    secret_dict = json.loads(secret['SecretString'])
+    hood_map = json.loads(secret_dict['NEIGHBORHOOD_MAP'])
 elif exists(neighborhood_map):
     with open(neighborhood_map) as file:
         hood_map = json.load(file)
