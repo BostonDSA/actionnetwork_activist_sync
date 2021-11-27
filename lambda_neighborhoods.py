@@ -40,7 +40,7 @@ elif exists(neighborhood_map):
 
 def lambda_handler(event, context):
     """
-    This lambda is intended to get triggered on a schdule via CloudWatch.
+    This lambda is intended to get triggered on a schedule via CloudWatch.
     """
 
     action_network = get_actionnetwork(api_key)
