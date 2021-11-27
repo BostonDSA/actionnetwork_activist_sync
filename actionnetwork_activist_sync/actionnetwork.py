@@ -89,16 +89,15 @@ class ActionNetwork(ActionNetworkApi):
         of this field.
 
         Args:
-          person (Person): An OSDI Person
+            person (Person): An OSDI Person
 
         Returns:
-          HTTP Response
+            HTTP Response
         """
 
         url = "{0}people/".format(self.base_url)
-        payload = {'person': {'email_addresses': person.email_addresses}}
-        resp = requests.post(url, json=payload, headers=self.headers)
-        return resp
+        payload = {'person': {'email_addresses': person['email_addresses']}}
+        requests.post(url, json=payload, headers=self.headers)
 
     def get_neighborhood_reports(self):
         """Returns all reports based on the naming convetion defined
@@ -107,7 +106,7 @@ class ActionNetwork(ActionNetworkApi):
         Reference: https://actionnetwork.org/docs/v2/lists
 
         Returns:
-          list of reports.
+            list of reports.
         """
 
         page = 1
@@ -123,15 +122,15 @@ class ActionNetwork(ActionNetworkApi):
         return list(filter(self.is_neighborhood_report, reports))
 
     def get_reports(self, page=1):
-        """Used for the Lists endpoing.
+        """Used for the Lists endpoint.
 
         See: https://actionnetwork.org/docs/v2/lists
 
         Args:
-          page (int): For pagination
+            page (int): For pagination
 
         Returns:
-          list of OSDI List
+            list of OSDI List
         """
 
         base = self.resource_to_url('lists')
@@ -143,10 +142,10 @@ class ActionNetwork(ActionNetworkApi):
         """Filter for getting reports based on a naming convention.
 
         Args:
-          report (dict): Report to check
+            report (dict): Report to check
 
         Returns:
-          bool
+            bool
         """
 
         return 'name' in report and 'description' in report \
@@ -154,16 +153,16 @@ class ActionNetwork(ActionNetworkApi):
         and report['description'] == 'Report'
 
     def get_people_from_report(self, report, page=1):
-        """Fetchs OSDI Items (people) from an OSDI List (report).
+        """Fetches OSDI Items (people) from an OSDI List (report).
 
         See: https://actionnetwork.org/docs/v2/items
 
         Args:
-          report (dict): Report from lists endpoint
-          page (int): For pagination
+            report (dict): Report from lists endpoint
+            page (int): For pagination
 
         Returns:
-          list of OSDI items
+            list of OSDI items
         """
 
         list_url = report['_links']['self']['href']
@@ -175,10 +174,10 @@ class ActionNetwork(ActionNetworkApi):
         """Handles pagination for fetching all people from a report.
 
         Args:
-          report (dict): Report from lists endpoint
+            report (dict): Report from lists endpoint
 
         Returns:
-          list of People
+            list of People
         """
 
         page = 1
