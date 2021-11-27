@@ -6,6 +6,7 @@ a membership has lapsed.
 
 import json
 import os
+from os.path import exists
 
 import boto3
 
@@ -26,15 +27,16 @@ if api_key.startswith('arn'):
 else:
     logger.debug('Using API key from Env.')
 
-hood_map = os.environ['NEIGHBORHOOD_MAP']
-if hood_map.startswith('arn'):
+neighborhood_map = os.environ['NEIGHBORHOOD_MAP']
+if neighborhood_map.startswith('arn'):
     raise NotImplementedError
     # secret = secrets_client.get_secret_value(SecretId=api_key)
     # secret_dict = json.loads(secret['SecretString'])
     # logger.debug('Using API key from Secrets Manager')
-else:
-    hood_map = json.loads(hood_map)
-    logger.debug('Using Neighborhood API key from Env.')
+elif exists(neighborhood_map):
+    with open(neighborhood_map) as file:
+        hood_map = json.load(file)
+    logger.debug('Using neighborhood map from file.')
 
 def lambda_handler(event, context):
     """
