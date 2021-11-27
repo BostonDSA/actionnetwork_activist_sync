@@ -80,17 +80,23 @@ def lambda_handler(event, context):
         new = 0
 
         for person in people:
-            if hood_an.get_person(person_id=person['action_network:person_id']):
+            hood_an_person = hood_an.get_person(person_id=person['action_network:person_id'])
+            if not 'error' in hood_an_person:
+                logger.debug(
+                    'Skipping person already subscribed.',
+                    extra={
+                        'emails': [email['address'] for email in action_network_person['email_addresses']]
+                    })
                 existing += 1
             else:
-                o_person = action_network.get_person(person_id=person['action_network:person_id'])
+                action_network_person = action_network.get_person(person_id=person['action_network:person_id'])
                 if not dry_run:
-                    hood_an.subscribe_person(o_person)
+                    hood_an.subscribe_person(action_network_person)
                 new += 1
                 logger.info(
                     'New person subscribed to neighborhood.',
                         extra={
-                            'emails': o_person.email_addresses,
+                            'emails': [email['address'] for email in action_network_person['email_addresses']],
                             'report': report['name']
                         })
 
