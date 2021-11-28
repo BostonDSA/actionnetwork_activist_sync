@@ -29,7 +29,7 @@ else:
 
 neighborhood_map = os.environ['NEIGHBORHOOD_MAP']
 if neighborhood_map.startswith('arn'):
-    secret = secrets_client.get_secret_value(SecretId=api_key)
+    secret = secrets_client.get_secret_value(SecretId=neighborhood_map)
     secret_dict = json.loads(secret['SecretString'])
     hood_map = json.loads(secret_dict['NEIGHBORHOOD_MAP'])
 elif exists(neighborhood_map):
