@@ -84,7 +84,7 @@ def lambda_handler(event, context):
                 logger.debug(
                     'Skipping person already subscribed.',
                     extra={
-                        'emails': [email['address'] for email in action_network_person['email_addresses']]
+                        'emails': [email['address'] for email in hood_an_person['email_addresses']]
                     })
                 existing += 1
             else:
