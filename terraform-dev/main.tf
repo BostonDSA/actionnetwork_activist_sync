@@ -40,6 +40,7 @@ variable "secrets" {
   default = {
     DSA_KEY               = "TESTKEY"
     ACTIONNETWORK_API_KEY = "TESTKEY"
+    NEIGHBORHOOD_MAP      = "TESTKEY"
   }
 
   type = map(string)

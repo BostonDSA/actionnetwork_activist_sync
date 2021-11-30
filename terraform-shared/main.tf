@@ -157,7 +157,7 @@ resource "aws_lambda_function" "an-sync-neighborhoods-lambda" {
   role             = aws_iam_role.an-sync-lambda-role.arn
   handler          = "lambda_neighborhoods.lambda_handler"
   runtime          = "python3.9"
-  timeout          = 600
+  timeout          = 900
 
   environment {
     variables = {
@@ -200,7 +200,8 @@ data "aws_iam_policy_document" "an-sync-step-invoke" {
     resources = [
       aws_lambda_function.an-sync-ingester-lambda.arn,
       aws_lambda_function.an-sync-processor-lambda.arn,
-      aws_lambda_function.an-sync-lapsed-lambda.arn
+      aws_lambda_function.an-sync-lapsed-lambda.arn,
+      aws_lambda_function.an-sync-neighborhoods-lambda.arn
     ]
   }
   statement {
