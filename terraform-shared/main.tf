@@ -149,6 +149,31 @@ resource "aws_lambda_function" "an-sync-lapsed-lambda" {
   }
 }
 
+resource "aws_lambda_function" "an-sync-neighborhoods-lambda" {
+  description      = "Action Network Sync Neighborhoods (Step 4)"
+  filename         = "../dist/sync.zip"
+  source_code_hash = filebase64sha256("../dist/sync.zip")
+  function_name    = "an-sync-neighborhoods-lambda"
+  role             = aws_iam_role.an-sync-lambda-role.arn
+  handler          = "lambda_neighborhoods.lambda_handler"
+  runtime          = "python3.9"
+  timeout          = 900
+
+  environment {
+    variables = {
+      ACTIONNETWORK_API_KEY = aws_secretsmanager_secret.an-sync-secrets.arn
+      DRY_RUN               = var.dry-run-neighborhoods
+      LOG_LEVEL             = "INFO"
+      NEIGHBORHOOD_MAP      = aws_secretsmanager_secret.an-sync-secrets.arn
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [environment]
+  }
+}
+
+
 data "aws_iam_policy_document" "an-sync-step-policy-assume" {
   policy_id = "an-sync-step-policy-assume"
   statement {
@@ -175,7 +200,8 @@ data "aws_iam_policy_document" "an-sync-step-invoke" {
     resources = [
       aws_lambda_function.an-sync-ingester-lambda.arn,
       aws_lambda_function.an-sync-processor-lambda.arn,
-      aws_lambda_function.an-sync-lapsed-lambda.arn
+      aws_lambda_function.an-sync-lapsed-lambda.arn,
+      aws_lambda_function.an-sync-neighborhoods-lambda.arn
     ]
   }
   statement {
@@ -238,6 +264,12 @@ resource "aws_sfn_state_machine" "an-sync-state-machine" {
     "Lapsed": {
       "Type": "Task",
       "Resource": "${aws_lambda_function.an-sync-lapsed-lambda.arn}",
+      "Next": "Neighborhoods"
+    },
+
+    "Neighborhoods": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.an-sync-neighborhoods-lambda.arn}",
       "Next": "Succeed"
     },
 

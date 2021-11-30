@@ -12,6 +12,7 @@ localstack-client = "*"
 pylint = "*"
 python-lambda-local = "*"
 green = "*"
+ipython = "*"
 moto = {extras = [ "dynamodb2", "s3", "secretsmanager",], version = "*"}
 
 [packages]

@@ -17,3 +17,7 @@ variable "dry-run-processor" {
 variable "dry-run-lapsed" {
   default = "1"
 }
+
+variable "dry-run-neighborhoods" {
+  default = "1"
+}
