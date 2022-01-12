@@ -27,6 +27,7 @@ pynamodb = "*"
 python-json-logger = "*"
 tenacity = "*"
 python-dateutil = "*"
+python-keycloak = "~=0.25.0"
 
 [requires]
 python_version = "3.9"
