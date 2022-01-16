@@ -10,6 +10,7 @@ import os
 
 from agate.rows import Row
 import boto3
+from keycloak import KeycloakAdmin
 from tenacity import Retrying, stop_after_attempt, wait_fixed
 
 from actionnetwork_activist_sync.actionnetwork import ActionNetwork
@@ -48,6 +49,7 @@ def lambda_handler(event, context):
     """
 
     actionnetwork = get_actionnetwork(api_key)
+    keycloak = get_keycloak()
 
     logger.info(
         'Starting to process DynamoDB items', extra={
@@ -100,6 +102,33 @@ def lambda_handler(event, context):
                         with attempt:
                             actionnetwork.update_person(**updated_person)
 
+
+        for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(5)):
+            with attempt:
+                keycloak_user_id = keycloak.get_user_id(item.email)
+
+        if keycloak_user_id:
+            for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(5)):
+                with attempt:
+                    keycloak.update_user(
+                        user_id=keycloak_user_id,
+                        payload={
+                            "enabled": True
+                        }
+                    )
+        else:
+            for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(5)):
+                with attempt:
+                    keycloak.create_user({
+                        "email": item.email,
+                        "username": item.email,
+                        "enabled": True,
+                        "requiredActions": [
+                            "UPDATE_PASSWORD"
+                        ]
+                    })
+
+
         item.status = State.PROCESSED
         item.save()
 
@@ -128,3 +157,16 @@ def get_actionnetwork(api_k):
     This function is a helper for mocking in tests"""
 
     return ActionNetwork(api_k)
+
+def get_keycloak():
+    """
+    Gets a KeycloakAdmin object to interact with the Keycloak API
+    """
+
+    return KeycloakAdmin(
+        server_url="https://auth.bostondsa.org/auth/",
+        client_id=os.environ.get('KEYCLOAK_CLIENT_ID'),
+        client_secret_key=os.environ.get('KEYCLOAK_CLIENT_SECRET_KEY'),
+        realm_name=os.environ.get('KEYCLOAK_REALM'),
+        verify=True
+    )
