@@ -103,31 +103,31 @@ def lambda_handler(event, context):
                             actionnetwork.update_person(**updated_person)
 
 
-        for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(5)):
-            with attempt:
-                keycloak_user_id = keycloak.get_user_id(item.email)
-
-        if keycloak_user_id:
+        if not dry_run:
             for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(5)):
                 with attempt:
-                    keycloak.update_user(
-                        user_id=keycloak_user_id,
-                        payload={
-                            "enabled": True
-                        }
-                    )
-        else:
-            for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(5)):
-                with attempt:
-                    keycloak.create_user({
-                        "email": item.email,
-                        "username": item.email,
-                        "enabled": True,
-                        "requiredActions": [
-                            "UPDATE_PASSWORD"
-                        ]
-                    })
+                    keycloak_user_id = keycloak.get_user_id(item.email)
 
+            if keycloak_user_id:
+                for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(5)):
+                    with attempt:
+                        keycloak.update_user(
+                            user_id=keycloak_user_id,
+                            payload={
+                                "enabled": field_mapper.get_is_member()
+                            }
+                        )
+            else:
+                for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(5)):
+                    with attempt:
+                        keycloak.create_user({
+                            "email": item.email,
+                            "username": item.email,
+                            "enabled": field_mapper.get_is_member(),
+                            "requiredActions": [
+                                "UPDATE_PASSWORD"
+                            ]
+                        })
 
         item.status = State.PROCESSED
         item.save()
@@ -164,7 +164,7 @@ def get_keycloak():
     """
 
     return KeycloakAdmin(
-        server_url="https://auth.bostondsa.org/auth/",
+        server_url=os.environ.get('KEYCLOAK_SERVER_URL'),
         client_id=os.environ.get('KEYCLOAK_CLIENT_ID'),
         client_secret_key=os.environ.get('KEYCLOAK_CLIENT_SECRET_KEY'),
         realm_name=os.environ.get('KEYCLOAK_REALM'),
