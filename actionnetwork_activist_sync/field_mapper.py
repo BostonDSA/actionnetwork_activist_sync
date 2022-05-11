@@ -115,26 +115,32 @@ class FieldMapper:
         """Formats custom fields"""
 
         custom_fields = {
-            'Address Line 2': self.exported_person.get('Billing_Address_Line_2'),
             'AK_ID': self.exported_person.get('AK_ID'),
-            'BDSA Xdate': self.exported_person.get('Xdate'),
-            'Do Not Call': self.exported_person.get('Do_Not_Call'),
-            # This is deprecated
-            #'DSA_ID': self.exported_person.get('DSA_ID'),
-            'Join Date': self.exported_person.get('Join_Date'),
-            'Mail Preference': self.exported_person.get('Mail_preference'),
             'Middle Name': self.exported_person.get('middle_name'),
-            'Phone': self.get_phone(),
-            'is_member': self.is_member,
+            # Suffix: not used
+            'Address Line 2': self.exported_person.get('Billing_Address_Line_2'),
+            # Mailing_Address1,Mailing_Address2,Mailing_City,Mailing_State,Mailing_Zip: not used
+            'Mail Preference': self.exported_person.get('Mail_preference'),
+            'Do Not Call': self.exported_person.get('Do_Not_Call'),
+            'Do Not Text': self.exported_person.get('p2ptext_optout'),
+
+            'Join Date': self.exported_person.get('Join_Date'),
+            'BDSA Xdate': self.exported_person.get('Xdate'),
             'membership_type': self.exported_person.get('membership_type'),
-            'membership_status': self.exported_person.get('membership_status'),
             'monthly_dues_status': self.exported_person.get('monthly_dues_status'),
+            'annual_recurring_dues_status': self.exported_person.get('annual_recurring_dues_status'),
+            'membership_status': self.exported_person.get('membership_status'),
+            'memb_status_letter': self.exported_person.get('memb_status_letter'),
+
             'union_member': self.exported_person.get('union_member'),
             'union_name': self.exported_person.get('union_name'),
             'union_local': self.exported_person.get('union_local'),
             'student_yes_no': self.exported_person.get('student_yes_no'),
             'student_school_name': self.exported_person.get('student_school_name'),
-            'YDSA Chapter': self.exported_person.get('YDSA Chapter')
+            'YDSA Chapter': self.exported_person.get('YDSA Chapter'),
+
+            'Phone': self.get_phone(),
+            'is_member': self.is_member
         }
 
         # filter None
