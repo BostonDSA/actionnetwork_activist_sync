@@ -57,12 +57,19 @@ class FieldMapper:
     def get_phone(self):
         """Normalizes phone data"""
 
-        # prefer mobile
-        phone = self.exported_person.get('Mobile_Phone')
+        # prefer best_phone
+        phone = self.exported_person.get('best_phone')
+
+        # fallback to mobile
+        if not phone:
+            phone = self.exported_person.get('Mobile_Phone')
 
         # fallback to home
         if not phone:
             phone = self.exported_person.get('Home_Phone')
+
+        if not phone:
+            phone = self.exported_person.get('Work_Phone')
 
         # clean phone data
         if phone:
