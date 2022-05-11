@@ -102,7 +102,11 @@ class FieldMapper:
             if delta.days > 60:
                 is_member = False
 
+        # DEPRECATED 2022-04-25, remove after a few months
         if self.exported_person.get('membership_status') == "expired":
+            is_member = False
+
+        if self.exported_person.get('membership_status') == "lapsed":
             is_member = False
 
         return is_member
