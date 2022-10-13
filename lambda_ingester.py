@@ -16,33 +16,9 @@ import uuid
 from urllib.parse import unquote_plus
 import zipfile
 
-import boto3
-
 from actionnetwork_activist_sync.logging import get_logger
 from actionnetwork_activist_sync.state_model import State
-
-logger = get_logger('lambda_ingester')
-
-if os.environ.get('ENVIRONMENT') == 'local':
-    import localstack_client.session
-    session = localstack_client.session.Session()
-else:
-    session = boto3.session.Session()
-
-dynamodb_client = session.client('dynamodb')
-s3_client = session.client('s3')
-secrets_client = session.client('secretsmanager')
-
-dsa_key = os.environ['DSA_KEY']
-if dsa_key.startswith('arn'):
-    secret = secrets_client.get_secret_value(SecretId=dsa_key)
-    secret_dict = json.loads(secret['SecretString'])
-    dsa_key = secret_dict['DSA_KEY']
-    logger.debug('Using DSA key from Secrets Manager')
-else:
-    logger.debug('Using DSA key from Env')
-
-batch = datetime.date.today().strftime('%Y%U')
+from actionnetwork_activist_sync.util import get_secret, get_aws_session
 
 def lambda_handler(event, context):
     """
@@ -51,6 +27,16 @@ def lambda_handler(event, context):
     and header that matches what we're expecting, then the CSV attachment
     will be ingested into DynamoDB.
     """
+
+    logger = get_logger('lambda_ingester')
+
+    session = get_aws_session()
+    s3_client = session.client('s3')
+
+    EMAIL_SUBJECT = get_secret('EMAIL_SUBJECT')
+    EMAIL_FROM = get_secret('EMAIL_FROM')
+
+    batch = get_batch()
 
     count = 0
 
@@ -68,8 +54,10 @@ def lambda_handler(event, context):
         # The full email gets deposited in the S3 bucket
         msg = email.message_from_file(email_file, policy=email.policy.default)
 
-        if dsa_key != msg.get('DsaKey'):
-            raise ValueError('DSA Key not found in email header, aborting.')
+        if msg.get('Subject') != EMAIL_SUBJECT:
+            raise ValueError('Email subject does not match expected')
+        if msg.get('From') != EMAIL_FROM:
+            raise ValueError('Email sender does not match expected')
 
         # ActionKit mails the report as an attached ZIP file
         attach = next(msg.iter_attachments())
@@ -121,3 +109,6 @@ def lambda_handler(event, context):
     event.update(result)
 
     return event
+
+def get_batch():
+    return datetime.date.today().strftime('%Y%U')
