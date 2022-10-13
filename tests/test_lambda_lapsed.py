@@ -10,7 +10,6 @@ from lambda_local.context import Context
 
 os.environ['ENVIRONMENT'] = 'TEST'
 os.environ['LOG_LEVEL'] = 'CRITICAL'
-os.environ['DSA_KEY'] = 'TESTKEY'
 
 class TestLapsed(unittest.TestCase):
 

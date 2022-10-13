@@ -12,7 +12,6 @@ from actionnetwork_activist_sync.osdi import Person
 
 os.environ['ENVIRONMENT'] = 'TEST'
 os.environ['LOG_LEVEL'] = 'CRITICAL'
-os.environ['DSA_KEY'] = 'TESTKEY'
 os.environ['DRY_RUN'] = '1'
 os.environ['ACTIONNETWORK_API_KEY'] = 'X'
 

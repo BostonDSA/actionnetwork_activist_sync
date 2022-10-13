@@ -38,9 +38,10 @@ resource "aws_secretsmanager_secret_version" "an-sync" {
 
 variable "secrets" {
   default = {
-    DSA_KEY               = "TESTKEY"
     ACTIONNETWORK_API_KEY = "TESTKEY"
     NEIGHBORHOOD_MAP      = "TESTKEY"
+    EMAIL_SUBJECT         = "SUBJECT"
+    EMAIL_FROM            = "test@example.com"
   }
 
   type = map(string)

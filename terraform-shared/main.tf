@@ -96,11 +96,13 @@ resource "aws_lambda_function" "an-sync-ingester-lambda" {
 
   environment {
     variables = {
-      DSA_KEY   = aws_secretsmanager_secret.an-sync-secrets.arn
       LOG_LEVEL = "INFO"
     }
   }
-
+  lifecycle {
+    ignore_changes = [
+      environment.0.variables
+    ]
 }
 
 resource "aws_lambda_function" "an-sync-processor-lambda" {
