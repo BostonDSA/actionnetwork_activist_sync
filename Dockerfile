@@ -6,7 +6,7 @@ COPY actionnetwork_activist_sync /var/task/actionnetwork_activist_sync
 
 RUN yum install -y zip
 RUN pip install pipenv
-RUN pipenv lock -r > requirements-lock.txt
+RUN pipenv requirements > requirements-lock.txt
 RUN pip install -r requirements-lock.txt -t .
 RUN find . -name __pycache__ | xargs rm -rf
 RUN mkdir dist
