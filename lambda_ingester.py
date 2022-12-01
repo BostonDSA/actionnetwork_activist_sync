@@ -34,7 +34,7 @@ def lambda_handler(event, context):
     s3_client = session.client('s3')
 
     EMAIL_SUBJECT = get_secret('EMAIL_SUBJECT')
-    EMAIL_FROM = get_secret('EMAIL_FROM')
+    EMAIL_FROM = get_secret('EMAIL_FROM').split(',')
 
     batch = get_batch()
 
@@ -55,8 +55,16 @@ def lambda_handler(event, context):
         msg = email.message_from_file(email_file, policy=email.policy.default)
 
         if msg.get('Subject') != EMAIL_SUBJECT:
+            logger.error(
+                'Email subject does not match expected',
+                extra={'subject': msg.get('Subject')}
+            )
             raise ValueError('Email subject does not match expected')
-        if msg.get('From') != EMAIL_FROM:
+        if msg.get('From') not in EMAIL_FROM:
+            logger.error(
+                'Email sender does not match expected',
+                extra={'from': msg.get('From'), 'expected': EMAIL_FROM}
+            )
             raise ValueError('Email sender does not match expected')
 
         # ActionKit mails the report as an attached ZIP file

@@ -56,6 +56,34 @@ class TestIngester(unittest.TestCase):
             self.get_event(bucket),
             Context(5))
 
+    def test_email_multi_from(self):
+        os.environ['EMAIL_FROM'] = 'sync@example.com,second@example.com'
+
+        csv_data = [
+            ['Email', 'Firstname', 'Lastname'],
+            ['kmarx@marxists.org', 'Karl', 'Marx']
+        ]
+
+        fake_zip = self.get_zipped_csv(csv_data)
+
+        email = EmailMessage()
+        email['Subject'] = os.environ['EMAIL_SUBJECT']
+        email['From'] = 'second@example.com'
+        email['To'] = 'test@example.com'
+        email.add_attachment(
+            fake_zip.getvalue(), maintype='application', subtype='zip')
+
+
+        bucket = 'actionnetworkactivistsync'
+        s3 = boto3.client('s3')
+        s3.create_bucket(Bucket=bucket)
+        s3.put_object(Bucket=bucket,Key='test.email',Body=email.as_bytes())
+
+        State.create_table(billing_mode='PAY_PER_REQUEST')
+        event = lambda_ingester.lambda_handler(self.get_event(bucket), Context(5))
+        self.assertIsNotNone(event)
+        State.delete_table()
+
     def test_email_attachment_wrong_mime(self):
         email = EmailMessage()
         email['Subject'] = os.environ['EMAIL_SUBJECT']

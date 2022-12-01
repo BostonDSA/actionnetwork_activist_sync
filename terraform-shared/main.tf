@@ -103,6 +103,7 @@ resource "aws_lambda_function" "an-sync-ingester-lambda" {
     ignore_changes = [
       environment.0.variables
     ]
+  }
 }
 
 resource "aws_lambda_function" "an-sync-processor-lambda" {
