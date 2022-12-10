@@ -115,7 +115,6 @@ class FieldMapper:
         """Formats custom fields"""
 
         custom_fields = {
-            'AK_ID': self.exported_person.get('AK_ID'),
             'Middle Name': self.exported_person.get('middle_name'),
             # Suffix: not used
             'Address Line 2': self.exported_person.get('Billing_Address_Line_2'),
@@ -124,13 +123,8 @@ class FieldMapper:
             'Do Not Call': self.exported_person.get('Do_Not_Call'),
             'Do Not Text': self.exported_person.get('p2ptext_optout'),
 
-            'Join Date': self.exported_person.get('Join_Date'),
-            'BDSA Xdate': self.exported_person.get('Xdate'),
-            'membership_type': self.exported_person.get('membership_type'),
             'monthly_dues_status': self.exported_person.get('monthly_dues_status'),
             'annual_recurring_dues_status': self.exported_person.get('annual_recurring_dues_status'),
-            'membership_status': self.exported_person.get('membership_status'),
-            'memb_status_letter': self.exported_person.get('memb_status_letter'),
 
             'union_member': self.exported_person.get('union_member'),
             'union_name': self.exported_person.get('union_name'),
