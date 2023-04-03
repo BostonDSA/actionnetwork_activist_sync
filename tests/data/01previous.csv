@@ -1,3 +1,3 @@
-﻿AK_ID,DSA_ID,first_name,middle_name,last_name,suffix,Family_first_name,Family_last_name,Organization,Address_Line_1,Address_Line_2,City,State,Zip,Country,Mobile_Phone,Home_Phone,Work_Phone,Email,Mail_preference,Do_Not_Call,Join_Date,Xdate,Memb_status,membership_type,monthly_status
+﻿ak_id,dsa_id,first_name,middle_name,last_name,suffix,family_first_name,family_last_name,organization,address_line_1,address_line_2,city,state,zip,country,mobile_phone,home_phone,work_phone,email,mail_preference,do_not_call,join_date,xdate,memb_status,membership_type,monthly_status
 100000,,John,,Doe,,,,,306 Congress St,,Boston,MA,02210-0000,United States,,6175555555,,john.doe@example.com,Yes,FALSE,8/19/2018,8/19/2020,M,monthly,active
 100001,,Jane,,Doe,,,,,139 Tremont St,,Boston,MA,02111-0000,United States,,6175556666,,jane.doe@example.com,Yes,FALSE,8/19/2018,8/19/2020,M,monthly,active

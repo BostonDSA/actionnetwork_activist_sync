@@ -92,14 +92,14 @@ def lambda_handler(event, context):
         for row in csv.DictReader(csv_lines):
             d_row = dict(row)
 
-            if 'Email' not in d_row or not d_row['Email']:
+            if 'email' not in d_row or not d_row['email']:
                 # We can't continue processing without an email
                 continue
 
             if not 'skip_db' in event:
                 state = State(
                     batch,
-                    d_row['Email'],
+                    d_row['email'],
                     raw=json.dumps(d_row),
                     status=State.UNPROCESSED
                 )

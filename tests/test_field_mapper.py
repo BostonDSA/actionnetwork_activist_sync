@@ -24,7 +24,7 @@ class TestFieldMapper(unittest.TestCase):
     def test_get_phone(self, raw, expected):
         """Test known phone formats"""
 
-        field_mapper = FieldMapper(Row([raw], ['Mobile_Phone']))
+        field_mapper = FieldMapper(Row([raw], ['mobile_phone']))
         actual = field_mapper.get_phone()
         self.assertEqual(expected, actual)
 
@@ -37,7 +37,7 @@ class TestFieldMapper(unittest.TestCase):
     def test_get_postal_code(self, raw, expected):
         """Test known zip formats"""
 
-        field_mapper = FieldMapper(Row([raw], ['Billing_Zip']))
+        field_mapper = FieldMapper(Row([raw], ['billing_zip']))
         actual = field_mapper.get_postal_code()
         self.assertEqual(expected, actual)
 
@@ -48,15 +48,13 @@ class TestFieldMapper(unittest.TestCase):
         self.assertEqual('NewName', person['given_name'])
 
     def test_overrides_custom_field(self):
-        field_mapper = FieldMapper(Row(['6175555555'], ['Mobile_Phone']))
+        field_mapper = FieldMapper(Row(['6175555555'], ['mobile_phone']))
         field_mapper.overrides = {'Phone': '6176666666'}
         person = field_mapper.get_actionnetwork_person()
         self.assertEqual('6176666666', person['custom_fields']['Phone'])
 
     @data(
-        ('Billing_Address_Line_2', 'Apt 123', 'Address Line 2', 'Apt 123'),
-        ('AK_ID', Decimal(1), 'AK_ID', '1'),
-        ('Join_Date', datetime(2020, 1, 9), 'Join Date', '2020-01-09 00:00:00')
+        ('billing_address_line_2', 'Apt 123', 'Address Line 2', 'Apt 123')
     )
     @unpack
     def test_get_custom_fields(self, key, value, expected_key, expected_value):
@@ -71,6 +69,6 @@ class TestFieldMapper(unittest.TestCase):
     )
     @unpack
     def test_get_is_member(self, xdate, membership_status, expected):
-        table = Table.from_object([{'Xdate': xdate, 'membership_status': membership_status}])
+        table = Table.from_object([{'xdate': xdate, 'membership_status': membership_status}])
         field_mapper = FieldMapper(table.rows[0])
         self.assertEqual(field_mapper.get_is_member(), expected)

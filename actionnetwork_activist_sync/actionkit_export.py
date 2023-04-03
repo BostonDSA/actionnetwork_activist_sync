@@ -44,12 +44,12 @@ class ActionKitExport:
 
     def filter_missing_email(self) -> None:
         """Strips out and saves rows that are missing emails"""
-        self.missing_email = self.current.where(lambda row: row['Email'] is None)
-        self.previous = self.previous.where(lambda row: row['Email'] is not None)
-        self.current = self.current.where(lambda row: row['Email'] is not None)
+        self.missing_email = self.current.where(lambda row: row['email'] is None)
+        self.previous = self.previous.where(lambda row: row['email'] is not None)
+        self.current = self.current.where(lambda row: row['email'] is not None)
 
     def get_previous_not_in_current(self) -> agate.Table:
         """Finds rows that were missing in the current spreadsheet"""
-        return self.previous.select(['Email']) \
-            .join(self.current, 'Email', 'Email', columns=['Email']) \
-            .where(lambda row: row['Email2'] is None)
+        return self.previous.select(['email']) \
+            .join(self.current, 'email', 'email', columns=['email']) \
+            .where(lambda row: row['email2'] is None)

@@ -22,7 +22,7 @@ class TestLapsed(unittest.TestCase):
         State.create_table(billing_mode='PAY_PER_REQUEST')
 
         j_karl = json.dumps({
-                'Email': 'kmarx@marxists.org',
+                'email': 'kmarx@marxists.org',
                 'firstname': 'Karl',
                 'lastname': 'Marx'
         })
@@ -74,7 +74,7 @@ class TestLapsed(unittest.TestCase):
             batch,
             'kmarx@marxists.org',
             raw=json.dumps({
-                'Email': 'kmarx@marxists.org',
+                'email': 'kmarx@marxists.org',
                 'firstname': 'Karl',
                 'lastname': 'Marx'
             }),
@@ -88,7 +88,7 @@ class TestLapsed(unittest.TestCase):
             batch,
             'fengels@marxists.org',
             raw=json.dumps({
-                'Email': 'fengles@marxists.org',
+                'email': 'fengles@marxists.org',
                 'firstname': 'Friedrich',
                 'lastname': 'Engels'
             }),

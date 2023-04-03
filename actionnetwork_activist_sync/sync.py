@@ -43,15 +43,15 @@ def sync(api_key):
     # in the previous one have had their membership lapse.
 
     for row in actionkit_export.get_previous_not_in_current().rows:
-        print('Toggle membership flag: {}'.format(row['Email']))
+        print('Toggle membership flag: {}'.format(row['email']))
         lapsed += 1
         if not dry_run:
-            actionnetwork.remove_member_by_email(row['Email'])
+            actionnetwork.remove_member_by_email(row['email'])
 
     for row in actionkit_export.current.rows:
         field_mapper = FieldMapper(row)
 
-        people = actionnetwork.get_people_by_email(row['Email'])
+        people = actionnetwork.get_people_by_email(row['email'])
         if len(people) == 0:
             person = field_mapper.get_actionnetwork_person()
             print('New member: {}'.format(person['email']))

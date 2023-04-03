@@ -27,16 +27,16 @@ class FieldMapper:
         """Main conversion method"""
 
         address = []
-        if self.exported_person.get('Billing_Address_Line_1'):
-            address.append(self.exported_person.get('Billing_Address_Line_1'))
+        if self.exported_person.get('billing_address_line_1'):
+            address.append(self.exported_person.get('billing_address_line_1'))
 
         person = {
-            'email': self.exported_person.get('Email'),
+            'email': self.exported_person.get('email'),
             'given_name': self.exported_person.get('first_name', default=''),
             'family_name': self.exported_person.get('last_name', default=''),
             'address': address,
-            'city': self.exported_person.get('Billing_City', default=''),
-            'state': self.exported_person.get('Billing_State', default=''),
+            'city': self.exported_person.get('billing_city', default=''),
+            'state': self.exported_person.get('billing_state', default=''),
             'country': 'US', # no country field in export
             'postal_code': self.get_postal_code(),
             'custom_fields': self.get_custom_fields()
@@ -62,14 +62,14 @@ class FieldMapper:
 
         # fallback to mobile
         if not phone:
-            phone = self.exported_person.get('Mobile_Phone')
+            phone = self.exported_person.get('mobile_phone')
 
         # fallback to home
         if not phone:
-            phone = self.exported_person.get('Home_Phone')
+            phone = self.exported_person.get('home_phone')
 
         if not phone:
-            phone = self.exported_person.get('Work_Phone')
+            phone = self.exported_person.get('work_phone')
 
         # clean phone data
         if phone:
@@ -83,7 +83,7 @@ class FieldMapper:
     def get_postal_code(self):
         """Normalizes postal code data"""
 
-        postal_code = self.exported_person.get('Billing_Zip', default='')
+        postal_code = self.exported_person.get('billing_zip', default='')
         if postal_code and len(postal_code) < 5 and postal_code.isnumeric():
             postal_code = f'{postal_code:0>5}'
 
@@ -94,7 +94,7 @@ class FieldMapper:
 
         is_member = True
 
-        xdate = self.exported_person.get('Xdate')
+        xdate = self.exported_person.get('xdate')
         if isinstance(xdate, date):
             now = datetime.now().date()
             delta = now - xdate
@@ -117,10 +117,10 @@ class FieldMapper:
         custom_fields = {
             'Middle Name': self.exported_person.get('middle_name'),
             # Suffix: not used
-            'Address Line 2': self.exported_person.get('Billing_Address_Line_2'),
+            'Address Line 2': self.exported_person.get('billing_address_line_2'),
             # Mailing_Address1,Mailing_Address2,Mailing_City,Mailing_State,Mailing_Zip: not used
-            'Mail Preference': self.exported_person.get('Mail_preference'),
-            'Do Not Call': self.exported_person.get('Do_Not_Call'),
+            'Mail Preference': self.exported_person.get('mail_preference'),
+            'Do Not Call': self.exported_person.get('do_not_call'),
             'Do Not Text': self.exported_person.get('p2ptext_optout'),
 
             'monthly_dues_status': self.exported_person.get('monthly_dues_status'),
@@ -131,7 +131,7 @@ class FieldMapper:
             'union_local': self.exported_person.get('union_local'),
             'student_yes_no': self.exported_person.get('student_yes_no'),
             'student_school_name': self.exported_person.get('student_school_name'),
-            'YDSA Chapter': self.exported_person.get('YDSA Chapter'),
+            'YDSA Chapter': self.exported_person.get('ydsa_chapter'),
 
             'Phone': self.get_phone(),
             'is_member': self.is_member

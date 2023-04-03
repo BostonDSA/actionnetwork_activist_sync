@@ -67,7 +67,7 @@ class TestActionKitExport(unittest.TestCase):
         export.filter_missing_email()
         previous_not_in_current = export.get_previous_not_in_current()
 
-        self.assertEqual(previous_not_in_current.rows[0]['Email'], 'john.doe@example.com')
+        self.assertEqual(previous_not_in_current.rows[0]['email'], 'john.doe@example.com')
 
         prev.close()
         cur.close()
