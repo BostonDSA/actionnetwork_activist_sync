@@ -54,7 +54,7 @@ class ActionNetwork(ActionNetworkApi):
 
         for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(5)):
             with attempt:
-                response = self.get_person(search_string=email)
+                response = self.get_person(search_by='email_address', search_string=email)
 
         return [Person(**p) for p in response['_embedded']['osdi:people']]
 
