@@ -63,12 +63,11 @@ class TestFieldMapper(unittest.TestCase):
         self.assertEqual(custom_fields[expected_key], expected_value)
 
     @data(
-        ('2020-01-01', 'member', False),
-        ('2030-01-01', 'member', True),
-        ('2030-01-01', 'expired', False),
+        ('M', True),
+        ('L', False)
     )
     @unpack
-    def test_get_is_member(self, xdate, membership_status, expected):
-        table = Table.from_object([{'xdate': xdate, 'membership_status': membership_status}])
+    def test_get_is_member(self, memb_status_letter, expected):
+        table = Table.from_object([{'memb_status_letter': memb_status_letter}])
         field_mapper = FieldMapper(table.rows[0])
         self.assertEqual(field_mapper.get_is_member(), expected)

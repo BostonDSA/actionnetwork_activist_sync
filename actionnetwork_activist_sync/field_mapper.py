@@ -92,22 +92,11 @@ class FieldMapper:
     def get_is_member(self):
         """Calculates membership status"""
 
-        is_member = True
+        is_member = False
 
-        xdate = self.exported_person.get('xdate')
-        if isinstance(xdate, date):
-            now = datetime.now().date()
-            delta = now - xdate
-
-            if delta.days > 60:
-                is_member = False
-
-        # DEPRECATED 2022-04-25, remove after a few months
-        if self.exported_person.get('membership_status') == "expired":
-            is_member = False
-
-        if self.exported_person.get('membership_status') == "lapsed":
-            is_member = False
+        memb_status = self.exported_person.get('memb_status_letter')
+        if memb_status == 'M':
+            is_member = True
 
         return is_member
 
