@@ -27,16 +27,16 @@ class FieldMapper:
         """Main conversion method"""
 
         address = []
-        if self.exported_person.get('billing_address_line_1'):
-            address.append(self.exported_person.get('billing_address_line_1'))
+        if self.exported_person.get('mailing_address1'):
+            address.append(self.exported_person.get('mailing_address1'))
 
         person = {
             'email': self.exported_person.get('email'),
             'given_name': self.exported_person.get('first_name', default=''),
             'family_name': self.exported_person.get('last_name', default=''),
             'address': address,
-            'city': self.exported_person.get('billing_city', default=''),
-            'state': self.exported_person.get('billing_state', default=''),
+            'city': self.exported_person.get('mailing_city', default=''),
+            'state': self.exported_person.get('mailing_state', default=''),
             'country': 'US', # no country field in export
             'postal_code': self.get_postal_code(),
             'custom_fields': self.get_custom_fields()
@@ -83,7 +83,7 @@ class FieldMapper:
     def get_postal_code(self):
         """Normalizes postal code data"""
 
-        postal_code = self.exported_person.get('billing_zip', default='')
+        postal_code = self.exported_person.get('mailing_zip', default='')
         if postal_code and len(postal_code) < 5 and postal_code.isnumeric():
             postal_code = f'{postal_code:0>5}'
 
@@ -106,9 +106,9 @@ class FieldMapper:
         custom_fields = {
             'Middle Name': self.exported_person.get('middle_name'),
             # Suffix: not used
-            'Address Line 2': self.exported_person.get('billing_address_line_2'),
+            'Address Line 2': self.exported_person.get('mailing_address2'),
             # Mailing_Address1,Mailing_Address2,Mailing_City,Mailing_State,Mailing_Zip: not used
-            'Mail Preference': self.exported_person.get('mail_preference'),
+            'Mail Preference': self.exported_person.get('mailing_preference'),
             'Do Not Call': self.exported_person.get('do_not_call'),
             'Do Not Text': self.exported_person.get('p2ptext_optout'),
 
