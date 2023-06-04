@@ -4,25 +4,20 @@ which records are missing from the new one. These indicate that
 a membership has lapsed.
 """
 
-import json
 import os
-from os.path import exists
-
-import boto3
 
 from actionnetwork_activist_sync.actionnetwork import ActionNetwork
 from actionnetwork_activist_sync.logging import get_logger
 from actionnetwork_activist_sync.util import get_secret
 
-logger = get_logger('lambda_neighborhoods')
-
-dry_run = os.environ.get('DRY_RUN') != '0'
-secrets_client = boto3.client('secretsmanager')
-
 def lambda_handler(event, context):
     """
     This lambda is intended to get triggered on a schedule via CloudWatch.
     """
+
+    logger = get_logger('lambda_neighborhoods')
+
+    dry_run = os.environ.get('DRY_RUN') != '0'
 
     api_key = get_secret('ACTIONNETWORK_API_KEY')
     hood_map = get_secret('NEIGHBORHOOD_MAP')
