@@ -1,4 +1,3 @@
-import importlib
 import os
 import unittest
 from unittest.mock import Mock
@@ -25,7 +24,6 @@ class TestNeighborhoods(unittest.TestCase):
 
     def test_missing_api_key(self):
         os.environ['NEIGHBORHOOD_MAP'] = '{}'
-        importlib.reload(lambda_neighborhoods)
 
         mock_an = Mock(ActionNetwork)
         mock_an.get_neighborhood_reports.return_value = [{'name': 'Neighborhood - Missing'}]
@@ -36,7 +34,6 @@ class TestNeighborhoods(unittest.TestCase):
 
     def test_report_has_no_new_people(self):
         os.environ['NEIGHBORHOOD_MAP'] = '{"Neighborhood - Missing": "XXX"}'
-        importlib.reload(lambda_neighborhoods)
 
         mock_an = Mock(ActionNetwork)
         mock_an.get_neighborhood_reports.return_value = [{'name': 'Neighborhood - Missing'}]
@@ -52,16 +49,30 @@ class TestNeighborhoods(unittest.TestCase):
 
     def test_report_has_existing_person(self):
         os.environ['NEIGHBORHOOD_MAP'] = '{"Neighborhood - Missing": "XXX"}'
-        importlib.reload(lambda_neighborhoods)
 
         mock_an = Mock(ActionNetwork)
         mock_an.get_neighborhood_reports.return_value = [{'name': 'Neighborhood - Missing'}]
-        mock_an.get_all_people_from_report.return_value = [
-            {'action_network:person_id': 1}
-        ]
+        mock_an.get_all_people_from_report.return_value = [{
+            'action_network:person_id': 1,
+            'given_name': 'Karl',
+            'family_name': 'Marx',
+            'email_addresses': [{
+                'primary': True,
+                'address': 'kmarx@bostondsa.org',
+                'status': 'subscribed'
+            }]
+        }]
 
         mock_hood_an = Mock(ActionNetwork)
-        mock_hood_an.get_person.return_value = Mock(Person)
+        mock_hood_an.get_person.return_value = {
+            'given_name': 'Karl',
+            'family_name': 'Marx',
+            'email_addresses': [{
+                'primary': True,
+                'address': 'kmarx@bostondsa.org',
+                'status': 'subscribed'
+            }],
+        }
 
         lambda_neighborhoods.get_actionnetwork = Mock()
         lambda_neighborhoods.get_actionnetwork.side_effect = [mock_an, mock_hood_an]
@@ -73,20 +84,24 @@ class TestNeighborhoods(unittest.TestCase):
         os.environ['NEIGHBORHOOD_MAP'] = '{"Neighborhood - Missing": "XXX"}'
         os.environ['DRY_RUN'] = '0'
 
-        importlib.reload(lambda_neighborhoods)
-
-        person = Mock(Person)
-        person.email_addresses = 'test@example.com'
+        person = {
+            'action_network:person_id': 1,
+            'given_name': 'Karl',
+            'family_name': 'Marx',
+            'email_addresses': [{
+                'primary': True,
+                'address': 'kmarx@bostondsa.org',
+                'status': 'subscribed'
+            }]
+        }
 
         mock_an = Mock(ActionNetwork)
         mock_an.get_neighborhood_reports.return_value = [{'name': 'Neighborhood - Missing'}]
-        mock_an.get_all_people_from_report.return_value = [
-            {'action_network:person_id': 1}
-        ]
+        mock_an.get_all_people_from_report.return_value = [person]
         mock_an.get_person.return_value = person
 
         mock_hood_an = Mock(ActionNetwork)
-        mock_hood_an.get_person.return_value = None
+        mock_hood_an.get_person.return_value = {'error': "Couldn't find User with uuid = 000"}
 
         lambda_neighborhoods.get_actionnetwork = Mock()
         lambda_neighborhoods.get_actionnetwork.side_effect = [mock_an, mock_hood_an]

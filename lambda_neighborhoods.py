@@ -4,6 +4,7 @@ which records are missing from the new one. These indicate that
 a membership has lapsed.
 """
 
+import json
 import os
 
 from actionnetwork_activist_sync.actionnetwork import ActionNetwork
@@ -20,7 +21,7 @@ def lambda_handler(event, context):
     dry_run = os.environ.get('DRY_RUN') != '0'
 
     api_key = get_secret('ACTIONNETWORK_API_KEY')
-    hood_map = get_secret('NEIGHBORHOOD_MAP')
+    hood_map = json.loads(get_secret('NEIGHBORHOOD_MAP'))
 
     action_network = get_actionnetwork(api_key)
     reports = action_network.get_neighborhood_reports()
