@@ -12,35 +12,20 @@ import boto3
 
 from actionnetwork_activist_sync.actionnetwork import ActionNetwork
 from actionnetwork_activist_sync.logging import get_logger
+from actionnetwork_activist_sync.util import get_secret
 
 logger = get_logger('lambda_neighborhoods')
 
 dry_run = os.environ.get('DRY_RUN') != '0'
 secrets_client = boto3.client('secretsmanager')
 
-api_key = os.environ['ACTIONNETWORK_API_KEY']
-if api_key.startswith('arn'):
-    secret = secrets_client.get_secret_value(SecretId=api_key)
-    secret_dict = json.loads(secret['SecretString'])
-    api_key = secret_dict['ACTIONNETWORK_API_KEY']
-    logger.debug('Using API key from Secrets Manager.')
-else:
-    logger.debug('Using API key from Env.')
-
-neighborhood_map = os.environ['NEIGHBORHOOD_MAP']
-if neighborhood_map.startswith('arn'):
-    secret = secrets_client.get_secret_value(SecretId=neighborhood_map)
-    secret_dict = json.loads(secret['SecretString'])
-    hood_map = json.loads(secret_dict['NEIGHBORHOOD_MAP'])
-elif exists(neighborhood_map):
-    with open(neighborhood_map) as file:
-        hood_map = json.load(file)
-    logger.debug('Using neighborhood map from file.')
-
 def lambda_handler(event, context):
     """
     This lambda is intended to get triggered on a schedule via CloudWatch.
     """
+
+    api_key = get_secret('ACTIONNETWORK_API_KEY')
+    hood_map = get_secret('NEIGHBORHOOD_MAP')
 
     action_network = get_actionnetwork(api_key)
     reports = action_network.get_neighborhood_reports()
