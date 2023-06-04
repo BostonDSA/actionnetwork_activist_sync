@@ -9,7 +9,6 @@ import json
 import os
 
 from agate.rows import Row
-import boto3
 from keycloak import KeycloakAdmin
 from tenacity import Retrying, stop_after_attempt, wait_fixed
 
@@ -17,36 +16,21 @@ from actionnetwork_activist_sync.actionnetwork import ActionNetwork
 from actionnetwork_activist_sync.logging import get_logger
 from actionnetwork_activist_sync.field_mapper import FieldMapper
 from actionnetwork_activist_sync.state_model import State
+from actionnetwork_activist_sync.util import get_secret
 
-logger = get_logger('lambda_processor')
-
-dry_run = os.environ.get('DRY_RUN') != '0'
-
-if os.environ.get('ENVIRONMENT') == 'local':
-    import localstack_client.session
-    session = localstack_client.session.Session()
-else:
-    session = boto3.session.Session()
-
-dynamodb_client = session.client('dynamodb')
-secrets_client = session.client('secretsmanager')
-
-api_key = os.environ['ACTIONNETWORK_API_KEY']
-if api_key.startswith('arn'):
-    secret = secrets_client.get_secret_value(SecretId=api_key)
-    secret_dict = json.loads(secret['SecretString'])
-    api_key = secret_dict['ACTIONNETWORK_API_KEY']
-    logger.debug('Using API key from Secrets Manager')
-else:
-    logger.debug('Using API key from Env')
-
-batch_size = 200
+BATCH_SIZE = 200
 
 def lambda_handler(event, context):
     """
     This handler gets triggered by the step function after the ingester has converted
     CSV rows into DynamoDB items. It handles creating new and updating existing users.
     """
+
+    logger = get_logger('lambda_processor')
+
+    dry_run = os.environ.get('DRY_RUN') != '0'
+
+    api_key = get_secret('ACTIONNETWORK_API_KEY')
 
     actionnetwork = get_actionnetwork(api_key)
     keycloak = get_keycloak()
@@ -62,8 +46,8 @@ def lambda_handler(event, context):
     unprocessed = State.query(
         hash_key=event['batch'],
         filter_condition=State.status == State.UNPROCESSED,
-        limit=batch_size
-        )
+        limit=BATCH_SIZE
+    )
 
     for item in unprocessed:
 
@@ -78,7 +62,7 @@ def lambda_handler(event, context):
         if len(people) == 0:
             person = field_mapper.get_actionnetwork_person()
 
-            logger.info('Creating new member', extra={'email': person['email']})
+            logger.info('Creating new member', extra={'email': item.email})
             new += 1
 
             if not dry_run:
@@ -102,7 +86,6 @@ def lambda_handler(event, context):
                         with attempt:
                             actionnetwork.update_person(**updated_person)
 
-
         for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(5)):
             with attempt:
                 keycloak_user_id = keycloak.get_user_id(item.email)
@@ -110,6 +93,10 @@ def lambda_handler(event, context):
         if keycloak_user_id:
             for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(5)):
                 with attempt:
+                    logger.info('Updating keycloak', extra={
+                        'keycloak_user_id': keycloak_user_id
+                    })
+
                     keycloak.update_user(
                         user_id=keycloak_user_id,
                         payload={
@@ -119,6 +106,10 @@ def lambda_handler(event, context):
         else:
             for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(5)):
                 with attempt:
+                    logger.info('Creating new user in keycloak', extra={
+                        'email': item.email
+                    })
+
                     keycloak.create_user({
                         "email": item.email,
                         "username": item.email,
