@@ -81,6 +81,15 @@ class FieldMapper:
 
         return phone
 
+    def get_email(self):
+        return self.exported_person.get('email')
+
+    def get_first_name(self):
+        return self.exported_person.get('first_name', default='')
+
+    def get_last_name(self):
+        return self.exported_person.get('last_name', default='')
+
     def get_postal_code(self):
         """Normalizes postal code data"""
 

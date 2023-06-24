@@ -23,8 +23,8 @@ class TestLapsed(unittest.TestCase):
 
         j_karl = json.dumps({
                 'email': 'kmarx@marxists.org',
-                'firstname': 'Karl',
-                'lastname': 'Marx'
+                'first_name': 'Karl',
+                'last_name': 'Marx'
         })
 
         self.create_karl_state(State, lambda_lapsed.cur_batch, State.PROCESSED)
@@ -75,8 +75,8 @@ class TestLapsed(unittest.TestCase):
             'kmarx@marxists.org',
             raw=json.dumps({
                 'email': 'kmarx@marxists.org',
-                'firstname': 'Karl',
-                'lastname': 'Marx'
+                'first_name': 'Karl',
+                'last_name': 'Marx'
             }),
             status=status
         )
@@ -89,8 +89,8 @@ class TestLapsed(unittest.TestCase):
             'fengels@marxists.org',
             raw=json.dumps({
                 'email': 'fengles@marxists.org',
-                'firstname': 'Friedrich',
-                'lastname': 'Engels'
+                'first_name': 'Friedrich',
+                'last_name': 'Engels'
             }),
             status=status
         )

@@ -60,7 +60,7 @@ class TestIngester(unittest.TestCase):
         os.environ['EMAIL_FROM'] = 'sync@example.com,second@example.com'
 
         csv_data = [
-            ['email', 'firstname', 'lastname'],
+            ['email', 'first_name', 'last_name'],
             ['kmarx@marxists.org', 'Karl', 'Marx']
         ]
 
@@ -106,7 +106,7 @@ class TestIngester(unittest.TestCase):
     def test_csv_gets_added_to_db(self):
 
         csv_data = [
-            ['email', 'firstname', 'lastname'],
+            ['email', 'first_name', 'last_name'],
             ['kmarx@marxists.org', 'Karl', 'Marx']
         ]
 
@@ -135,7 +135,7 @@ class TestIngester(unittest.TestCase):
 
     def test_missing_email_gets_skipped(self):
         csv_data = [
-            ['email', 'firstname', 'lastname'],
+            ['email', 'first_name', 'last_name'],
             ['', 'Karl', 'Marx']
         ]
 

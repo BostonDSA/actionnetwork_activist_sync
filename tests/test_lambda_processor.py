@@ -1,11 +1,13 @@
 import os
-import importlib
 import json
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from moto import mock_dynamodb2
 from lambda_local.context import Context
+
+from tenacity import RetryError
+from keycloak import KeycloakAdmin
 
 import lambda_processor
 from actionnetwork_activist_sync.actionnetwork import ActionNetwork
@@ -21,8 +23,13 @@ os.environ['ACTIONNETWORK_API_KEY'] = 'X'
 @mock_dynamodb2
 class TestProcessor(unittest.TestCase):
 
-    def test_create_new_member(self):
+    def setUp(self) -> None:
         State.create_table(billing_mode='PAY_PER_REQUEST')
+
+    def tearDown(self) -> None:
+        State.delete_table()
+
+    def test_create_new_member(self):
         self.create_karl_state()
 
         mock_an = Mock(ActionNetwork)
@@ -44,10 +51,7 @@ class TestProcessor(unittest.TestCase):
         self.assertFalse(result['hasMore'])
         mock_keycloak.create_user.assert_called()
 
-        State.delete_table()
-
     def test_update_existing_member(self):
-        State.create_table(billing_mode='PAY_PER_REQUEST')
         self.create_karl_state()
 
         event = {
@@ -62,7 +66,7 @@ class TestProcessor(unittest.TestCase):
         lambda_processor.get_actionnetwork = lambda a: mock_an
 
         mock_keycloak = Mock(KeycloakService)
-        mock_keycloak.get_user_by_email = Mock(return_value=1)
+        mock_keycloak.get_user_by_email = Mock(return_value={'id': 1})
         lambda_processor.get_keycloak = lambda: mock_keycloak
 
         result = lambda_processor.lambda_handler(event, Context(5))
@@ -71,12 +75,9 @@ class TestProcessor(unittest.TestCase):
         self.assertFalse(result['hasMore'])
         mock_keycloak.update_user.assert_called()
 
-        State.delete_table()
-
     def test_has_more(self):
         lambda_processor.BATCH_SIZE = 1
 
-        State.create_table(billing_mode='PAY_PER_REQUEST')
         self.create_karl_state()
         self.create_friedrich_state()
 
@@ -97,12 +98,9 @@ class TestProcessor(unittest.TestCase):
         result = lambda_processor.lambda_handler(event, Context(5))
         self.assertTrue(result['hasMore'])
 
-        State.delete_table()
-
     def test_counts_go_up(self):
         lambda_processor.BATCH_SIZE = 1
 
-        State.create_table(billing_mode='PAY_PER_REQUEST')
         self.create_karl_state()
         self.create_friedrich_state()
 
@@ -129,7 +127,85 @@ class TestProcessor(unittest.TestCase):
         self.assertEqual(result2['updated_members'], 2)
         self.assertFalse(result2['hasMore'])
 
-        State.delete_table()
+    @patch('random.randint', return_value=9999)
+    def test_create_new_member_username_exists_in_keycloak(self, mock_rand):
+        lambda_processor.RETRY_DELAY = 0
+
+        self.create_karl_state()
+
+        mock_an = Mock(ActionNetwork)
+        mock_an.get_people_by_email = Mock(return_value=[])
+        mock_an.create_person = Mock()
+        lambda_processor.get_actionnetwork = lambda a: mock_an
+
+        mock_keycloak_admin = Mock(KeycloakAdmin)
+        keycloak_service = KeycloakService(mock_keycloak_admin)
+        keycloak_service.get_user_by_email = Mock(return_value=None)
+        keycloak_service.check_username = Mock(side_effect=ValueError)
+        lambda_processor.get_keycloak = lambda: keycloak_service
+
+        event = {
+            'batch': '202101',
+            'ingested_rows': 1
+        }
+
+        with self.assertRaises(RetryError):
+            lambda_processor.lambda_handler(event, Context(5))
+
+    @patch('random.randint', return_value=9999)
+    def test_update_existing_member_username_matches_email(self, mock_rand):
+        lambda_processor.RETRY_DELAY = 0
+
+        self.create_karl_state()
+
+        event = {
+            'batch': '202101',
+            'ingested_rows': 1
+        }
+
+        karl =  self.get_karl_person()
+
+        mock_an = Mock(ActionNetwork)
+        mock_an.get_people_by_email = Mock(return_value=[karl])
+        lambda_processor.get_actionnetwork = lambda a: mock_an
+
+        mock_keycloak_admin = Mock(KeycloakAdmin)
+        keycloak_service = KeycloakService(mock_keycloak_admin)
+        keycloak_service.get_user_by_email = Mock(return_value={'id': 1, 'username': 'kmarx@marxists.org', 'email': 'kmarx@marxists.org'})
+        keycloak_service.check_username = Mock()
+        lambda_processor.get_keycloak = lambda: keycloak_service
+
+        lambda_processor.lambda_handler(event, Context(5))
+        mock_keycloak_admin.update_user.assert_called()
+        self.assertEqual(
+            mock_keycloak_admin.update_user.call_args.kwargs['payload']['username'],
+            'KarlM9999')
+
+    @patch('random.randint', return_value=9999)
+    def test_update_existing_member_username_matches_email_new_username_taken(self, mock_rand):
+        lambda_processor.RETRY_DELAY = 0
+
+        self.create_karl_state()
+
+        event = {
+            'batch': '202101',
+            'ingested_rows': 1
+        }
+
+        karl =  self.get_karl_person()
+
+        mock_an = Mock(ActionNetwork)
+        mock_an.get_people_by_email = Mock(return_value=[karl])
+        lambda_processor.get_actionnetwork = lambda a: mock_an
+
+        mock_keycloak_admin = Mock(KeycloakAdmin)
+        keycloak_service = KeycloakService(mock_keycloak_admin)
+        keycloak_service.get_user_by_email = Mock(return_value={'id': 1, 'username': 'kmarx@marxists.org', 'email': 'kmarx@marxists.org'})
+        keycloak_service.check_username = Mock(side_effect=ValueError)
+        lambda_processor.get_keycloak = lambda: keycloak_service
+
+        with self.assertRaises(RetryError):
+            lambda_processor.lambda_handler(event, Context(5))
 
     def create_karl_state(self):
         state = State(
@@ -137,8 +213,8 @@ class TestProcessor(unittest.TestCase):
             'kmarx@marxists.org',
             raw=json.dumps({
                 'Email': 'kmarx@marxists.org',
-                'firstname': 'Karl',
-                'lastname': 'Marx'
+                'first_name': 'Karl',
+                'last_name': 'Marx'
             }),
             status=State.UNPROCESSED
         )
@@ -151,8 +227,8 @@ class TestProcessor(unittest.TestCase):
             'fengels@marxists.org',
             raw=json.dumps({
                 'Email': 'fengles@marxists.org',
-                'firstname': 'Friedrich',
-                'lastname': 'Engels'
+                'first_name': 'Friedrich',
+                'last_name': 'Engels'
             }),
             status=State.UNPROCESSED
         )

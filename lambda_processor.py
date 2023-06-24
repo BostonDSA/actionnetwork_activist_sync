@@ -20,6 +20,7 @@ from actionnetwork_activist_sync.state_model import State
 from actionnetwork_activist_sync.util import get_secret
 
 BATCH_SIZE = 200
+RETRY_DELAY = 5
 
 def lambda_handler(event, context):
     """
@@ -67,7 +68,7 @@ def lambda_handler(event, context):
             new += 1
 
             if not dry_run:
-                for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(5)):
+                for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(RETRY_DELAY)):
                     with attempt:
                         actionnetwork.create_person(**person)
         else:
@@ -83,25 +84,31 @@ def lambda_handler(event, context):
                 updated += 1
 
                 if not dry_run:
-                    for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(5)):
+                    for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(RETRY_DELAY)):
                         with attempt:
                             actionnetwork.update_person(**updated_person)
 
-        keycloak_user_id = keycloak.get_user_by_email(item.email)
+        #region keycloak
+        keycloak_user = keycloak.get_user_by_email(item.email)
 
-        if keycloak_user_id:
+        if keycloak_user:
             logger.info('Updating keycloak', extra={
-                'keycloak_user_id': keycloak_user_id
+                'keycloak_user_id': keycloak_user
             })
 
-            keycloak.update_user(keycloak_user_id)
+            for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(RETRY_DELAY)):
+                with attempt:
+                    keycloak.update_user(field_mapper, keycloak_user)
 
         else:
             logger.info('Creating new user in keycloak', extra={
                 'email': item.email
             })
 
-            keycloak.create_user(item.email)
+            for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(RETRY_DELAY)):
+                with attempt:
+                    keycloak.create_user(field_mapper)
+        #endregion keycloak
 
         item.status = State.PROCESSED
         item.save()
