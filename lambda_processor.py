@@ -139,7 +139,7 @@ def get_keycloak():
 
     return KeycloakService(
         KeycloakAdmin(
-            server_url="https://auth.bostondsa.org/auth/",
+            server_url="https://auth.bostondsa.org/",
             client_id=os.environ.get('KEYCLOAK_CLIENT_ID'),
             client_secret_key=os.environ.get('KEYCLOAK_CLIENT_SECRET_KEY'),
             realm_name=os.environ.get('KEYCLOAK_REALM'),
