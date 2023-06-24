@@ -13,8 +13,9 @@ from keycloak import KeycloakAdmin
 from tenacity import Retrying, stop_after_attempt, wait_fixed
 
 from actionnetwork_activist_sync.actionnetwork import ActionNetwork
-from actionnetwork_activist_sync.logging import get_logger
 from actionnetwork_activist_sync.field_mapper import FieldMapper
+from actionnetwork_activist_sync.keycloak import KeycloakService
+from actionnetwork_activist_sync.logging import get_logger
 from actionnetwork_activist_sync.state_model import State
 from actionnetwork_activist_sync.util import get_secret
 
@@ -86,39 +87,21 @@ def lambda_handler(event, context):
                         with attempt:
                             actionnetwork.update_person(**updated_person)
 
-        for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(5)):
-            with attempt:
-                keycloak_user_id = keycloak.get_user_id(item.email)
+        keycloak_user_id = keycloak.get_user_by_email(item.email)
 
         if keycloak_user_id:
-            for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(5)):
-                with attempt:
-                    logger.info('Updating keycloak', extra={
-                        'keycloak_user_id': keycloak_user_id
-                    })
+            logger.info('Updating keycloak', extra={
+                'keycloak_user_id': keycloak_user_id
+            })
 
-                    keycloak.update_user(
-                        user_id=keycloak_user_id,
-                        payload={
-                            "enabled": True
-                        }
-                    )
+            keycloak.update_user(keycloak_user_id)
+
         else:
-            for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(5)):
-                with attempt:
-                    logger.info('Creating new user in keycloak', extra={
-                        'email': item.email
-                    })
+            logger.info('Creating new user in keycloak', extra={
+                'email': item.email
+            })
 
-                    keycloak.create_user({
-                        "email": item.email,
-                        "username": item.email,
-                        "enabled": True,
-                        "requiredActions": [
-                            "UPDATE_PASSWORD"
-                        ]
-                    })
-
+            keycloak.create_user(item.email)
 
         item.status = State.PROCESSED
         item.save()
@@ -154,10 +137,12 @@ def get_keycloak():
     Gets a KeycloakAdmin object to interact with the Keycloak API
     """
 
-    return KeycloakAdmin(
-        server_url="https://auth.bostondsa.org/auth/",
-        client_id=os.environ.get('KEYCLOAK_CLIENT_ID'),
-        client_secret_key=os.environ.get('KEYCLOAK_CLIENT_SECRET_KEY'),
-        realm_name=os.environ.get('KEYCLOAK_REALM'),
-        verify=True
+    return KeycloakService(
+        KeycloakAdmin(
+            server_url="https://auth.bostondsa.org/auth/",
+            client_id=os.environ.get('KEYCLOAK_CLIENT_ID'),
+            client_secret_key=os.environ.get('KEYCLOAK_CLIENT_SECRET_KEY'),
+            realm_name=os.environ.get('KEYCLOAK_REALM'),
+            verify=True
+        )
     )

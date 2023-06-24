@@ -6,10 +6,10 @@ from unittest.mock import Mock
 
 from moto import mock_dynamodb2
 from lambda_local.context import Context
-from keycloak import KeycloakAdmin
 
 import lambda_processor
 from actionnetwork_activist_sync.actionnetwork import ActionNetwork
+from actionnetwork_activist_sync.keycloak import KeycloakService
 from actionnetwork_activist_sync.osdi import Person
 from actionnetwork_activist_sync.state_model import State
 
@@ -29,8 +29,8 @@ class TestProcessor(unittest.TestCase):
         mock_an.get_people_by_email = Mock(return_value=[])
         lambda_processor.get_actionnetwork = lambda a: mock_an
 
-        mock_keycloak = Mock(KeycloakAdmin)
-        mock_keycloak.get_user_id = Mock(return_value=None)
+        mock_keycloak = Mock(KeycloakService)
+        mock_keycloak.get_user_by_email = Mock(return_value=None)
         lambda_processor.get_keycloak = lambda: mock_keycloak
 
         event = {
@@ -61,8 +61,8 @@ class TestProcessor(unittest.TestCase):
         mock_an.get_people_by_email = Mock(return_value=[karl])
         lambda_processor.get_actionnetwork = lambda a: mock_an
 
-        mock_keycloak = Mock(KeycloakAdmin)
-        mock_keycloak.get_user_id = Mock(return_value=1)
+        mock_keycloak = Mock(KeycloakService)
+        mock_keycloak.get_user_by_email = Mock(return_value=1)
         lambda_processor.get_keycloak = lambda: mock_keycloak
 
         result = lambda_processor.lambda_handler(event, Context(5))
@@ -91,7 +91,7 @@ class TestProcessor(unittest.TestCase):
         mock_an.get_people_by_email = Mock(return_value=[karl])
         lambda_processor.get_actionnetwork = lambda a: mock_an
 
-        mock_keycloak = Mock(KeycloakAdmin)
+        mock_keycloak = Mock(KeycloakService)
         lambda_processor.get_keycloak = lambda: mock_keycloak
 
         result = lambda_processor.lambda_handler(event, Context(5))
@@ -115,7 +115,7 @@ class TestProcessor(unittest.TestCase):
         mock_an.get_people_by_email = Mock(return_value=[self.get_karl_person()])
         lambda_processor.get_actionnetwork = lambda a: mock_an
 
-        mock_keycloak = Mock(KeycloakAdmin)
+        mock_keycloak = Mock(KeycloakService)
         lambda_processor.get_keycloak = lambda: mock_keycloak
 
         mock_an.get_people_by_email = Mock(return_value=[self.get_friedrich_person()])
