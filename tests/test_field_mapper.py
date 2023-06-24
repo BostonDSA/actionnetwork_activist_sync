@@ -4,6 +4,7 @@
 from datetime import datetime
 from decimal import Decimal
 import unittest
+from unittest.mock import patch
 
 from agate import Row, Table
 from ddt import ddt, data, unpack
@@ -71,3 +72,17 @@ class TestFieldMapper(unittest.TestCase):
         table = Table.from_object([{'memb_status_letter': memb_status_letter}])
         field_mapper = FieldMapper(table.rows[0])
         self.assertEqual(field_mapper.get_is_member(), expected)
+
+
+    @data(
+        ('Karl', 'Marx', 9999, 'KarlM9999'), # Happy path
+        ('', 'Marx', 9999, 'RoseM9999'), # No first name
+        ('Karl', '', 9999, 'Karl9999'), # No last name
+        ('Karl', 'Marx', 10, 'KarlM0010') # Zero-padded
+    )
+    @unpack
+    def test_generate_username(self, first, last, rand, expected):
+        with patch('random.randint') as mock_rand:
+            mock_rand.return_value = rand
+            field_mapper = FieldMapper(Row([first, last], ['first_name', 'last_name']))
+            self.assertEqual(field_mapper.generate_username(), expected)

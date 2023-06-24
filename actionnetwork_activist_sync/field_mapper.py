@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """Logic to convert people data from ActionKit to ActionNetwork"""
 
-from datetime import datetime, date
+from datetime import datetime
 from decimal import Decimal
+import random
 
 class FieldMapper:
     """Map fields from ActionKit to ActionNetwork
@@ -138,3 +139,25 @@ class FieldMapper:
                 custom_fields[k] = 'True' if v else 'False'
 
         return custom_fields
+
+    def generate_username(self):
+        """
+        Generates a username of the format:
+            FirstNameLastInitialFourRandomNumbers
+        Example:
+            Karl Marx -> KarlM9999
+        """
+
+        # Fall back to Rose as a default first name.
+        # Agate default covers case where first_name doesn't exist,
+        # but not when it's None or empty.
+        first_name = self.exported_person.get('first_name', default='Rose')
+        if not first_name:
+            first_name = 'Rose'
+
+        last_initial = self.exported_person.get('last_name', default='')[:1]
+
+        # Add some randomness since FirstName LastIntial has collision potential
+        rnd = str(random.randint(10, 9999)).zfill(4)
+
+        return f"{first_name}{last_initial}{rnd}"
