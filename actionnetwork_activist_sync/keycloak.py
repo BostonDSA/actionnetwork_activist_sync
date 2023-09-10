@@ -76,7 +76,8 @@ class KeycloakService:
                 "email": field_mapper.get_email(),
                 "firstName": field_mapper.get_first_name(),
                 "lastName": field_mapper.get_last_name(),
-                "enabled": True
+                "enabled": True,
+                "emailVerified": True
             }
         )
 
