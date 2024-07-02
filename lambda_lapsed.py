@@ -115,82 +115,22 @@ def lambda_handler(event, context):
     topic = os.environ.get('SLACK_TOPIC_ARN')
     chan = os.environ.get('SLACK_CHANNEL')
 
-    blocks = []
-    blocks.append({
-        "type": "header",
-        "text": {
-            "type": "plain_text",
-            "text": ":package: New member data has been synced from national.",
-            "emoji": True
-        }
-	})
     if errMsg:
-        blocks.append({
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": f":warning: `Error` {errMsg}"
-            }
-        })
-    blocks.append({
-        "type": "divider"
-    })
-    blocks.append({
-        "type": "section",
-        "fields": [
-            {
-                "type": "mrkdwn",
-                "text": f":balloon: New members: *{event['new_members'] if 'new_members' in event else 'error'}*"
-            },
-            {
-                "type": "mrkdwn",
-                "text": f":cry: Expired members: *{removed}*"
-            },
-            {
-                "type": "mrkdwn",
-                "text": f":tada: Updated members: *{event['updated_members'] if 'updated_members' in event else 'error'}*"
-            }
-        ]
-    })
-    blocks.append({
-        "type": "divider"
-    })
-    blocks.append({
-        "type": "context",
-        "elements": [
-            {
-                "type": "image",
-                "image_url": "https://github.com/favicon.ico",
-                "alt_text": "GitHub"
-            },
-            {
-                "type": "mrkdwn",
-                "text": "github.com/BostonDSA/actionnetwork_activist_sync\nData is synced weekly on Monday",
-                "verbatim": True
-            }
-        ]
-    })
+        message = f':warning: **Error** {errMsg}'
+    else:
+        message = (
+            f'# New member data has been synced from national.\n'
+            f'- :balloon: New members: **{event['new_members'] if 'new_members' in event else 'error'}**\n'
+            f'- :cry: Expired members: **{removed}**\n'
+            f'- :tada: Updated members: **{event['updated_members'] if 'updated_members' in event else 'error'}**\n'
+            f'*[GitHub](github.com/BostonDSA/actionnetwork_activist_sync) - Data is synced weekly on Friday*'
+        )
 
     if os.environ.get('SLACK_ENABLED') == '1' and topic and chan:
         sns_client.publish(
             TopicArn=topic,
-            Message=json.dumps({
-                "channel": chan,
-                "text": "New member data has arrived from national.",
-                "blocks": blocks
-            }),
-            MessageAttributes={
-                'id': {
-                    'DataType': 'String',
-                    'StringValue': 'postMessage'
-                },
-                'type': {
-                    'DataType': 'String',
-                    'StringValue': 'chat'
-                }
-            }
+            Message=message
         )
-
 
     return event
 

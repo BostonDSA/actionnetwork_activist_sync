@@ -69,7 +69,7 @@ data "aws_iam_policy_document" "an-sync-lambda-policy-attach" {
       "sns:Publish"
     ]
     # TODO Replace hardcoding
-    resources = ["arn:aws:sns:us-east-1:715992480927:slack-socialismbot"]
+    resources = ["arn:aws:sns:us-east-1:715992480927:sns-discord-webhook"]
   }
 }
 
