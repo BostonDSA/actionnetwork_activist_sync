@@ -1,7 +1,5 @@
 """
-This lambda compares new batches to previous batches to detect
-which records are missing from the new one. These indicate that
-a membership has lapsed.
+This lambda syncs members from the main ActionNetwork groups to the Neighborhood groups
 """
 
 import json
@@ -13,7 +11,7 @@ from actionnetwork_activist_sync.util import get_secret
 
 def lambda_handler(event, context):
     """
-    This lambda is intended to get triggered on a schedule via CloudWatch.
+    This lambda is triggered via Step Function
     """
 
     logger = get_logger('lambda_neighborhoods')

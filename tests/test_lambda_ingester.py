@@ -5,7 +5,7 @@ import os
 import unittest
 import zipfile
 
-from moto import mock_s3, mock_dynamodb2, mock_secretsmanager
+from moto import mock_aws
 import boto3
 from lambda_local.context import Context
 
@@ -17,9 +17,7 @@ os.environ['EMAIL_FROM'] = 'sync@example.com'
 import lambda_ingester
 from actionnetwork_activist_sync.state_model import State
 
-@mock_secretsmanager
-@mock_s3
-@mock_dynamodb2
+@mock_aws
 class TestIngester(unittest.TestCase):
 
     def test_email_wrong_subject(self):

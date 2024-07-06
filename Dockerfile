@@ -1,4 +1,4 @@
-FROM amazon/aws-lambda-python:3.9 AS build
+FROM amazon/aws-lambda-python:3.11 AS build
 
 COPY Pipfile* /var/task
 COPY *.py /var/task

@@ -1,7 +1,5 @@
 """
-This lambda compares new batches to previous batches to detect
-which records are missing from the new one. These indicate that
-a membership has lapsed.
+This lambda handles off-boarding when members quit the organization
 """
 
 import datetime
@@ -43,9 +41,8 @@ prev_batch = last_week.strftime('%Y%U')
 
 def lambda_handler(event, context):
     """
-    This lambda is intended to get triggered on a schdule via CloudWatch.
+    This lambda is triggered via Step Function
     """
-
     removed = 0
     cur_count = State.count(hash_key=cur_batch)
     prev_count = State.count(hash_key=prev_batch)
@@ -63,15 +60,15 @@ def lambda_handler(event, context):
     cur_emails = [c.email for c in cur_items]
     prev_emails = [p.email for p in prev_items]
 
-    errMsg = None
+    err_msg = None
 
     if cur_count == 0 or len(cur_emails) == 0:
-        errMsg = 'No current batch, something is probably wrong.'
-        logger.error(errMsg)
+        err_msg = 'No current batch, something is probably wrong.'
+        logger.error(err_msg)
 
     if prev_count == 0 or len(prev_emails) == 0:
-        errMsg = 'No previous batch. If this is not the first week, then something is probably wrong.'
-        logger.error(errMsg)
+        err_msg = 'No previous batch. If this is not the first week, then something is probably wrong.'
+        logger.error(err_msg)
 
     logger.info(
         'Checking previous email list against current.',
@@ -115,15 +112,15 @@ def lambda_handler(event, context):
     topic = os.environ.get('SLACK_TOPIC_ARN')
     chan = os.environ.get('SLACK_CHANNEL')
 
-    if errMsg:
-        message = f':warning: **Error** {errMsg}'
+    if err_msg:
+        message = f':warning: **Error** {err_msg}'
     else:
         message = (
-            f'# New member data has been synced from national.\n'
-            f'- :balloon: New members: **{event['new_members'] if 'new_members' in event else 'error'}**\n'
-            f'- :cry: Expired members: **{removed}**\n'
-            f'- :tada: Updated members: **{event['updated_members'] if 'updated_members' in event else 'error'}**\n'
-            f'*[GitHub](github.com/BostonDSA/actionnetwork_activist_sync) - Data is synced weekly on Friday*'
+            f"# New member data has been synced from national.\n"
+            f"- :balloon: New members: **{event['new_members'] if 'new_members' in event else 'error'}**\n"
+            f"- :cry: Expired members: **{removed}**\n"
+            f"- :tada: Updated members: **{event['updated_members'] if 'updated_members' in event else 'error'}**\n"
+            f"*[GitHub](github.com/BostonDSA/actionnetwork_activist_sync) - Data is synced weekly on Friday*"
         )
 
     if os.environ.get('SLACK_ENABLED') == '1' and topic and chan:

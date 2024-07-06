@@ -4,7 +4,7 @@ import os
 import unittest
 from unittest.mock import Mock
 
-from moto import mock_dynamodb2
+from moto import mock_aws
 import boto3
 from lambda_local.context import Context
 
@@ -13,7 +13,7 @@ os.environ['LOG_LEVEL'] = 'CRITICAL'
 
 class TestLapsed(unittest.TestCase):
 
-    @mock_dynamodb2
+    @mock_aws
     def test_in_both_is_noop(self):
         import lambda_lapsed
         from actionnetwork_activist_sync.actionnetwork import ActionNetwork
@@ -39,7 +39,7 @@ class TestLapsed(unittest.TestCase):
         self.assertEqual(result['cur_count'], 1)
         self.assertEqual(result['prev_count'], 1)
 
-    @mock_dynamodb2
+    @mock_aws
     def test_not_in_cur_but_in_prev_gets_removed(self):
         import lambda_lapsed
         from actionnetwork_activist_sync.actionnetwork import ActionNetwork

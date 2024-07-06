@@ -3,7 +3,7 @@ import json
 import unittest
 from unittest.mock import Mock, patch
 
-from moto import mock_dynamodb2
+from moto import mock_aws
 from lambda_local.context import Context
 
 from tenacity import RetryError
@@ -20,7 +20,7 @@ os.environ['LOG_LEVEL'] = 'CRITICAL'
 os.environ['DRY_RUN'] = '1'
 os.environ['ACTIONNETWORK_API_KEY'] = 'X'
 
-@mock_dynamodb2
+@mock_aws
 class TestProcessor(unittest.TestCase):
 
     def setUp(self) -> None:

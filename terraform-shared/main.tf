@@ -91,7 +91,7 @@ resource "aws_lambda_function" "an-sync-ingester-lambda" {
   function_name    = "an-sync-ingester-lambda"
   role             = aws_iam_role.an-sync-lambda-role.arn
   handler          = "lambda_ingester.lambda_handler"
-  runtime          = "python3.9"
+  runtime          = "python3.11"
   timeout          = 300
 
   environment {
@@ -113,7 +113,7 @@ resource "aws_lambda_function" "an-sync-processor-lambda" {
   function_name    = "an-sync-processor-lambda"
   role             = aws_iam_role.an-sync-lambda-role.arn
   handler          = "lambda_processor.lambda_handler"
-  runtime          = "python3.9"
+  runtime          = "python3.11"
   timeout          = 600
 
   environment {
@@ -136,7 +136,7 @@ resource "aws_lambda_function" "an-sync-lapsed-lambda" {
   function_name    = "an-sync-lapsed-lambda"
   role             = aws_iam_role.an-sync-lambda-role.arn
   handler          = "lambda_lapsed.lambda_handler"
-  runtime          = "python3.9"
+  runtime          = "python3.11"
   timeout          = 600
 
   environment {
@@ -159,7 +159,7 @@ resource "aws_lambda_function" "an-sync-neighborhoods-lambda" {
   function_name    = "an-sync-neighborhoods-lambda"
   role             = aws_iam_role.an-sync-lambda-role.arn
   handler          = "lambda_neighborhoods.lambda_handler"
-  runtime          = "python3.9"
+  runtime          = "python3.11"
   timeout          = 900
 
   environment {
