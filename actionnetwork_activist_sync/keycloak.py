@@ -39,7 +39,7 @@ class KeycloakService:
         """
         for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(5)):
             with attempt:
-                users = self.keycloak.get_users({'email': email})
+                users = self.keycloak.get_users({'email': email, 'exact': True})
                 keycloak_user = next(iter(users), None)
 
         return keycloak_user
