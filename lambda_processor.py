@@ -30,6 +30,12 @@ def lambda_handler(event, context):
 
     logger = get_logger('lambda_processor')
 
+    def log_retry(retry_state):
+        logger.warning('Retrying after error', extra={
+            'attempt': retry_state.attempt_number,
+            'exception': str(retry_state.outcome.exception())
+        })
+
     dry_run = os.environ.get('DRY_RUN') != '0'
 
     api_key = get_secret('ACTIONNETWORK_API_KEY')
@@ -68,9 +74,16 @@ def lambda_handler(event, context):
             new += 1
 
             if not dry_run:
-                for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(RETRY_DELAY)):
+                for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(RETRY_DELAY), before_sleep=log_retry):
                     with attempt:
-                        actionnetwork.create_person(**person)
+                        try:
+                            actionnetwork.create_person(**person)
+                        except json.JSONDecodeError as e:
+                            logger.warning('ActionNetwork returned non-JSON response', extra={
+                                'email': item.email,
+                                'response_text': e.doc,
+                            })
+                            raise
         else:
             for existing_person in people:
                 field_mapper.person_id = existing_person.get_actionnetwork_id()
@@ -84,9 +97,16 @@ def lambda_handler(event, context):
                 updated += 1
 
                 if not dry_run:
-                    for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(RETRY_DELAY)):
+                    for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(RETRY_DELAY), before_sleep=log_retry):
                         with attempt:
-                            actionnetwork.update_person(**updated_person)
+                            try:
+                                actionnetwork.update_person(**updated_person)
+                            except json.JSONDecodeError as e:
+                                logger.warning('ActionNetwork returned non-JSON response', extra={
+                                    'email': item.email,
+                                    'response_text': e.doc,
+                                })
+                                raise
 
         #region keycloak
         keycloak_user = keycloak.get_user_by_email(item.email)
@@ -96,7 +116,7 @@ def lambda_handler(event, context):
                 'keycloak_user_id': keycloak_user
             })
 
-            for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(RETRY_DELAY)):
+            for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(RETRY_DELAY), before_sleep=log_retry):
                 with attempt:
                     keycloak.update_user(field_mapper, keycloak_user)
 
@@ -105,7 +125,7 @@ def lambda_handler(event, context):
                 'email': item.email
             })
 
-            for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(RETRY_DELAY)):
+            for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(RETRY_DELAY), before_sleep=log_retry):
                 with attempt:
                     keycloak.create_user(field_mapper)
         #endregion keycloak
