@@ -1,0 +1,44 @@
+[project]
+name = "actionnetwork-activist-sync-bostondsa"
+version = "0.0.1"
+description = "Syncs Activists to ActionNetwork"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "BostonDSA", email = "tech@bostondsa.org" }]
+requires-python = ">=3.11"
+dependencies = [
+    "agate",
+    "agate-excel",
+    "boto3",
+    "colored",
+    "csvkit",
+    "dictdiffer",
+    "pyActionNetwork",
+    "pynamodb",
+    "python-json-logger",
+    "tenacity",
+    "python-dateutil",
+    "python-keycloak~=0.25.0",
+]
+
+[dependency-groups]
+dev = [
+    "awscli",
+    "awscli-local",
+    "ddt",
+    "localstack",
+    "localstack-client",
+    "pylint",
+    "python-lambda-local",
+    "green",
+    "ipython",
+    "moto[dynamodb,s3,secretsmanager]",
+    "setuptools",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["actionnetwork_activist_sync"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

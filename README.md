@@ -30,9 +30,9 @@ The Lapsed process happens as a clean-up step. It looks for Items in the DynamoD
 
 ## Prerequisites
 
-### Pipenv
+### uv
 
-[Pipenv Installation Instructions](https://pipenv-fork.readthedocs.io/en/latest/install.html). The majority of the code is written in Python. Pipenv handles managing the dependencies.
+[uv Installation Instructions](https://docs.astral.sh/uv/getting-started/installation/). The majority of the code is written in Python. uv handles the Python version and all dependencies. After installing uv, run `uv sync --dev` to set up the virtual environment, or use `uv run <command>` directly without activating anything.
 
 ### Terraform
 
