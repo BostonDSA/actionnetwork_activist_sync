@@ -19,6 +19,7 @@ os.environ['ENVIRONMENT'] = 'TEST'
 os.environ['LOG_LEVEL'] = 'CRITICAL'
 os.environ['DRY_RUN'] = '1'
 os.environ['ACTIONNETWORK_API_KEY'] = 'X'
+os.environ['AWS_DEFAULT_REGION'] = 'us-east-1'
 
 @mock_aws
 class TestProcessor(unittest.TestCase):

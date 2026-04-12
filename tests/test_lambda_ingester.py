@@ -13,6 +13,7 @@ os.environ['ENVIRONMENT'] = 'TEST'
 os.environ['LOG_LEVEL'] = 'CRITICAL'
 os.environ['EMAIL_SUBJECT'] = 'SYNC'
 os.environ['EMAIL_FROM'] = 'sync@example.com'
+os.environ['AWS_DEFAULT_REGION'] = 'us-east-1'
 
 import lambda_ingester
 from actionnetwork_activist_sync.state_model import State
