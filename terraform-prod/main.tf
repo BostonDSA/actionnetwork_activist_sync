@@ -3,12 +3,12 @@ terraform {
     bucket  = "terraform.bostondsa.org"
     key     = "actionnetwork_activist_sync.tfstate"
     region  = "us-east-1"
-    profile = "bostondsa"
+    #profile = "bostondsa"
   }
 }
 
 provider "aws" {
-  profile = "bostondsa"
+  #profile = "bostondsa"
   region  = "us-east-1"
 }
 
